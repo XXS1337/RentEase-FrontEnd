@@ -1,0 +1,79 @@
+import { createContext, useContext, useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
+import axios from './../api/axiosConfig';
+import type { ReactNode } from 'react';
+import type User from './../types/User';
+
+// Define the shape of the AuthContext
+type AuthContextType = {
+  user: User | null; // The currently logged-in user or null
+  loading: boolean; // Indicates if the auth state is being initialized
+  login: (userData: User, token: string) => void; // Function to log in a user
+  logout: () => void; // Function to log out the user
+  isAuthenticated: boolean; // Indicates if a user is logged in
+};
+
+// Create the context with undefined as default to enforce use within a provider
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// AuthProvider component that wraps around parts of the app that need authentication context
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null); // Holds the authenticated user
+  const [loading, setLoading] = useState(true); // Indicates loading state when initializing
+
+  // On component mount, check if a token exists in cookies and load the user
+  useEffect(() => {
+    const loadUser = async () => {
+      const token = Cookies.get('token');
+      if (!token) {
+        setLoading(false); // No token, done loading
+        return;
+      }
+
+      try {
+        // Attempt to fetch the current user using the token
+        const { data } = await axios.get('/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(data.currentUser as User); // Make sure the backend returns expected structure
+      } catch (error) {
+        console.error('Error loading user:', error);
+        Cookies.remove('token'); // Remove token if invalid
+        setUser(null);
+      } finally {
+        setLoading(false); // Always stop loading regardless of result
+      }
+    };
+
+    loadUser(); // Invoke function
+  }, []);
+
+  // Log in function: saves token to cookies and sets user
+  const login = (userData: User, token: string) => {
+    Cookies.set('token', token, { expires: 1 }); // Expires in 1 day
+    setUser(userData);
+  };
+
+  // Log out function: removes token and resets user
+  const logout = () => {
+    Cookies.remove('token');
+    setUser(null);
+    // Optional redirect to login page
+    window.location.href = '/login';
+  };
+
+  // Boolean flag indicating if a user is authenticated
+  const isAuthenticated = !!user;
+
+  // Provide context values to children components
+  return <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated }}>{children}</AuthContext.Provider>;
+};
+
+// Custom hook for accessing the AuthContext
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
