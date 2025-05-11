@@ -60,6 +60,33 @@ input:focus {
     margin-right: auto;
 }
 
+.imagePreview {
+    margin-top: 1rem;
+    text-align: center;
+    padding: 0.5rem;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.imagePreview p {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #333;
+    font-size: 1rem;
+}
+
+.imagePreview img {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+}
+
 .error {
     color: red;
     font-size: 0.875rem;
@@ -133,6 +160,10 @@ input:focus {
     button {
         font-size: 0.9rem;
         padding: 0.6rem;
+    }
+
+    .imagePreview img {
+        max-width: 100%;
     }
 
 }

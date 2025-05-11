@@ -1,60 +1,51 @@
 import React from 'react';
 import { useLoaderData, useNavigate, redirect } from 'react-router-dom';
-import { collection, getDocs, doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
+import Cookies from 'js-cookie';
+import axios from './../../../api/axiosConfig';
 import { IoMdHeart } from 'react-icons/io';
-import { db } from '../../../../firebase';
-import { Flat } from '../../../types/Flat';
 import styles from './Favorites.module.css';
 
 // Loader function to fetch the user's favorite flats
-export const favoritesLoader = async (): Promise<{ favorites: (Flat & { id: string })[]; userId: string } | Response> => {
-  const userId = localStorage.getItem('loggedInUser'); // Retrieve logged-in user I
+export const favoritesLoader = async () => {
+  const token = Cookies.get('token');
+  if (!token) return redirect('/login');
 
-  if (!userId) {
-    return redirect('/login'); // Redirect to login if the user is not logged in
+  try {
+    const { data } = await axios.get('/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const favoriteFlatIds = data.currentUser.favoriteFlats || [];
+
+    const { data: flatsData } = await axios.get('/flats');
+
+    const favorites = flatsData.data
+      .filter((flat: any) => favoriteFlatIds.includes(flat._id))
+      .map((flat: any) => ({
+        ...flat,
+        id: flat._id,
+        image: flat.image?.url,
+      }))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return { favorites };
+  } catch (err) {
+    console.error('Failed to load favorite flats:', err);
+    return redirect('/login');
   }
-
-  // Fetch user document from Firestore
-  const userRef = doc(db, 'users', userId);
-  const userDoc = await getDoc(userRef);
-  const userFavorites = userDoc.exists() ? userDoc.data().favoriteFlats || [] : []; // Retrieve the list of favorite flats
-
-  // Fetch all flats from Firestore
-  const flatsRef = collection(db, 'flats');
-  const flatsSnapshot = await getDocs(flatsRef);
-
-  // Filter and map favorite flats
-  const favorites: (Flat & { id: string })[] = flatsSnapshot.docs
-    .filter((doc) => userFavorites.includes(doc.id))
-    .map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Flat),
-      image: `/flats/${doc.data().image}`, // Add the image path
-    }));
-
-  // Sort favorites by creation date in descending order
-  favorites.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-  return { favorites, userId }; // Return favorite flats and user ID
 };
 
 const Favorites: React.FC = () => {
-  const { favorites, userId } = useLoaderData<{ favorites: (Flat & { id: string })[]; userId: string }>(); // Load favorite flats and user ID from loader
+  const { favorites } = useLoaderData() as { favorites: any[] };
   const navigate = useNavigate();
 
-  // Handle removing a flat from favorites
   const handleRemoveFavorite = async (flatId: string) => {
     try {
-      const userRef = doc(db, 'users', userId);
-
-      // Update Firestore to remove the flat from user's favorites
-      await updateDoc(userRef, {
-        favoriteFlats: arrayRemove(flatId),
+      const token = Cookies.get('token');
+      await axios.delete(`/flats/${flatId}/removeFromFavorites`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Navigate to the current page with updated favorites
-      const updatedFavorites = favorites.filter((flat) => flat.id !== flatId);
-      navigate('.', { state: { favorites: updatedFavorites } });
+      window.location.reload();
     } catch (error) {
       console.error('Error removing favorite flat:', error);
     }
@@ -63,8 +54,6 @@ const Favorites: React.FC = () => {
   return (
     <div className={styles.favorites}>
       <h2>Your Favorite Flats</h2>
-
-      {/* Display message if no favorite flats */}
       {favorites.length === 0 ? (
         <p className={styles.noResults}>You have no favorite flats.</p>
       ) : (
@@ -74,8 +63,6 @@ const Favorites: React.FC = () => {
               <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
                 <img src={flat.image} alt={flat.adTitle} />
               </div>
-
-              {/* Flat details */}
               <div className={styles.flatDetails}>
                 <h3>{flat.adTitle}</h3>
                 <p>
@@ -100,14 +87,8 @@ const Favorites: React.FC = () => {
                   <strong>Rent price:</strong> {flat.rentPrice} €/month
                 </p>
                 <p>
-                  <strong>Date available:</strong>{' '}
-                  {new Date(flat.dateAvailable).toLocaleDateString('en-US', {
-                    month: '2-digit',
-                    day: '2-digit',
-                    year: 'numeric',
-                  })}
+                  <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
                 </p>
-                {/* Remove from favorites icon */}
                 <IoMdHeart className={styles.removeFavorite} onClick={() => handleRemoveFavorite(flat.id)} title="Remove from Favorites" />
               </div>
             </div>

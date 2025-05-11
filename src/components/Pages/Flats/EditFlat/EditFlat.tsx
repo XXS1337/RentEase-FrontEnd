@@ -1,118 +1,121 @@
-import React, { useState, useEffect, ChangeEvent, FocusEvent } from 'react';
-import { useActionData, Form, useNavigate, useLoaderData } from 'react-router-dom';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '../../../../../firebase';
+import React, { useState, useEffect } from 'react';
+import type { ChangeEvent, FocusEvent } from 'react';
+import { useActionData, Form, useNavigate, useLoaderData, redirect } from 'react-router-dom';
 import { validateField } from '../../../../utils/validateField';
-import { Flat, FieldErrors } from '../../../../types/Flat';
+import type { Flat, FieldErrors } from '../../../../types/Flat';
 import styles from './EditFlat.module.css';
+import axios from '../../../../api/axiosConfig';
+import Cookies from 'js-cookie';
+import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router-dom';
 
-interface LoaderParams {
-  params: {
-    flatID: string;
-  };
-}
-
-// Loader to fetch flat data for editing
-export const editFlatLoader = async ({ params }: LoaderParams) => {
-  const flatID = params.flatID; // Extract flat ID from route params
+export const editFlatLoader = async ({ params }: LoaderFunctionArgs) => {
+  const token = Cookies.get('token');
+  if (!token) return redirect('/login');
 
   try {
-    const flatDoc = await getDoc(doc(db, 'flats', flatID)); // Fetch flat data from Firestore
-    if (flatDoc.exists()) {
-      return { ...flatDoc.data(), id: flatID }; // Return the flat data with its ID
-    } else {
-      throw new Error('Flat not found'); // Handle case where flat doesn't exist
+    // 1. Fetch flat info
+    const { data: flatRes } = await axios.get(`/flats/${params.flatID}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const flat = flatRes.data;
+
+    // 2. Fetch current user info
+    const { data: userRes } = await axios.get('/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const currentUserId = userRes.currentUser._id;
+    const ownerId = flat.owner?._id || flat.owner; // ._id dacă e populat, altfel ID brut
+
+    // 3. Compare ownership
+    if (ownerId !== currentUserId) {
+      throw new Response('Unauthorized: You cannot edit this flat.', { status: 403 });
     }
+
+    // 4. Format and return flat data
+    const formattedDate = flat.dateAvailable.split('T')[0];
+
+    return {
+      ...flat,
+      id: flat._id,
+      image: flat.image?.url || '',
+      streetNumber: flat.streetNumber || '',
+      dateAvailable: formattedDate,
+    };
   } catch (error) {
-    console.error('Error fetching flat data:', error); // Log error
-    throw new Response('Failed to fetch flat data.', { status: 404 });
+    console.error('Error in editFlatLoader:', error);
+    throw new Response('Access denied or flat not found.', { status: 403 });
   }
 };
 
-// Action to handle flat data updates
-export const editFlatAction = async ({ request, params }: { request: Request; params: { flatID: string } }) => {
-  const formData = await request.formData(); // Parse form data
-  const flatID = params.flatID; // Extract flat ID from route params
+export const editFlatAction = async ({ request, params }: ActionFunctionArgs) => {
+  const token = Cookies.get('token');
+  if (!token) return redirect('/login');
 
-  const flatDoc = await getDoc(doc(db, 'flats', flatID)); // Fetch the current flat data
-  if (!flatDoc.exists()) {
-    throw new Error('Flat not found'); // Handle missing flat
-  }
-  const originalFlatData = flatDoc.data() as Flat; // Store original flat data for validation
-
-  // Extract form data fields
-  const adTitle = formData.get('adTitle') as string;
-  const city = formData.get('city') as string;
-  const streetName = formData.get('streetName') as string;
-  const streetNumber = formData.get('streetNumber') as string;
-  const areaSize = formData.get('areaSize') as string;
-  const hasAC = formData.get('hasAC') === 'on'; // Convert checkbox value to boolean
-  const yearBuilt = formData.get('yearBuilt') as string;
-  const rentPrice = formData.get('rentPrice') as string;
-  const dateAvailable = formData.get('dateAvailable') as string;
-  const imageFile = formData.get('image') as File; // Handle optional image file upload
-
-  const errors: FieldErrors = {}; // Object to hold validation errors
-
-  // Validate fields using validateField
-  errors.adTitle = await validateField('adTitle', adTitle);
-  errors.city = await validateField('city', city);
-  errors.streetName = await validateField('streetName', streetName);
-  errors.streetNumber = await validateField('streetNumber', streetNumber);
-  errors.areaSize = await validateField('areaSize', areaSize);
-  errors.yearBuilt = await validateField('yearBuilt', yearBuilt);
-  errors.rentPrice = await validateField('rentPrice', rentPrice);
-  errors.dateAvailable = await validateField('updatedDateAvailable', dateAvailable, {
-    originalDate: new Date(originalFlatData.dateAvailable),
-  });
-  errors.image = imageFile && imageFile.name ? await validateField('image', imageFile.name) : '';
-
-  Object.keys(errors).forEach((key) => {
-    if (!errors[key as keyof FieldErrors]) delete errors[key as keyof FieldErrors];
-  });
-
-  if (Object.keys(errors).length > 0) {
-    return { errors };
-  }
+  const formData = await request.formData();
+  const flatID = params.flatID;
 
   try {
-    // Create an object with the updated flat data to be saved in Firestore
-    const updatedData: Partial<Flat> = {
-      adTitle,
-      city,
-      streetName,
-      streetNumber: Number(streetNumber),
-      areaSize: Number(areaSize),
-      hasAC,
-      yearBuilt: Number(yearBuilt),
-      rentPrice: Number(rentPrice),
-      dateAvailable,
+    const dateInput = formData.get('dateAvailable') as string;
+    const [year, month, day] = dateInput.split('-').map(Number);
+    const isoDateUTC = new Date(Date.UTC(year, month - 1, day)).toISOString();
+
+    console.log('📅 Raw date input from form:', dateInput);
+
+    const updatedData = {
+      adTitle: formData.get('adTitle') as string,
+      city: formData.get('city') as string,
+      streetName: formData.get('streetName') as string,
+      streetNumber: formData.get('streetNumber') as string,
+      areaSize: Number(formData.get('areaSize')),
+      hasAC: formData.get('hasAC') === 'on',
+      yearBuilt: Number(formData.get('yearBuilt')),
+      rentPrice: Number(formData.get('rentPrice')),
+      dateAvailable: isoDateUTC,
     };
 
-    // Additional logic to handle the optional image upload
-    if (imageFile && imageFile.name) {
-      updatedData.image = imageFile.name; // Include new image file name if uploaded
+    const imageFile = formData.get('image') as File;
+    const isNewImage = imageFile && imageFile.size > 0;
+
+    if (isNewImage) {
+      const combinedData = new FormData();
+      Object.entries(updatedData).forEach(([key, value]) => {
+        combinedData.append(key, value.toString());
+      });
+      combinedData.append('image', imageFile);
+
+      await axios.patch(`/flats/${flatID}`, combinedData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      await axios.patch(`/flats/${flatID}`, updatedData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
     }
 
-    await updateDoc(doc(db, 'flats', flatID), updatedData); // Update flat data in Firestore
-    return { success: true }; // Indicate success
-  } catch (error) {
-    console.error('Error updating flat:', error); // Log error
-    return { errors: { general: 'Failed to update flat. Please try again.' } }; // Return general error
+    return redirect('/myFlats');
+  } catch (error: any) {
+    console.error('Error updating flat:', error);
+    return {
+      errors: {
+        general: error.response?.data?.message || 'Failed to update flat. Please try again.',
+        ...(error.response?.data?.errors || {}),
+      },
+    };
   }
 };
 
-// Component to handle the editing of a flat.
 const EditFlat: React.FC = () => {
   const flatData = useLoaderData<Flat>();
   const actionData = useActionData<{ success?: boolean; errors?: FieldErrors }>();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<Flat>(flatData); // State to store form data
-  const [originalData, setOriginalData] = useState<Flat>(flatData); // State to store original flat data for comparison
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({}); // State to track field-level errors
-  const [generalError, setGeneralError] = useState<string | null>(null); // General error state
+  const [formData, setFormData] = useState<Flat>(flatData);
+  const [originalData, setOriginalData] = useState<Flat>(flatData);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
-  // Update form data when the loader data changes
   useEffect(() => {
     if (flatData) {
       setFormData(flatData);
@@ -120,64 +123,58 @@ const EditFlat: React.FC = () => {
     }
   }, [flatData]);
 
-  // Redirect to the user's flats page on successful update
   useEffect(() => {
     if (actionData?.success) {
       alert('Flat updated successfully!');
       navigate('/myFlats');
     }
-
     if (actionData?.errors?.general) {
-      setGeneralError(actionData.errors.general); // Set general error
+      setGeneralError(actionData.errors.general);
     }
   }, [actionData, navigate]);
 
-  // Validate fields on blur
   const handleBlur = async (e: FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
     const { name, value, files } = target;
     const fieldValue = name === 'image' ? files?.[0]?.name || '' : value;
-    const error = name === 'dateAvailable' ? await validateField('updatedDateAvailable', value, { originalDate: new Date(originalData.dateAvailable) }) : await validateField(name, fieldValue);
+    const error = await validateField(name === 'dateAvailable' ? 'updatedDateAvailable' : name, fieldValue, {
+      originalDate: new Date(originalData.dateAvailable),
+    });
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  // Handle input changes
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked, files } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'file' ? files?.[0] || null : value,
     }));
-    setFieldErrors((prev) => ({ ...prev, [name]: null })); // Clear error for the field
-    setGeneralError(null); // Clear general error
+    setFieldErrors((prev) => ({ ...prev, [name]: null }));
+    setGeneralError(null);
   };
 
-  // Check if the form is valid
   const isFormValid = () => {
-    const hasErrors = Object.values(fieldErrors).some((error) => error); // Check for errors
-
+    const hasErrors = Object.values(fieldErrors).some((error) => error);
     const hasChanges =
       originalData &&
       (formData.adTitle !== originalData.adTitle ||
         formData.city !== originalData.city ||
         formData.streetName !== originalData.streetName ||
-        Number(formData.streetNumber) !== originalData.streetNumber ||
+        formData.streetNumber !== originalData.streetNumber ||
         Number(formData.areaSize) !== originalData.areaSize ||
         Number(formData.yearBuilt) !== originalData.yearBuilt ||
         Number(formData.rentPrice) !== originalData.rentPrice ||
         formData.dateAvailable !== originalData.dateAvailable ||
         formData.hasAC !== originalData.hasAC ||
-        (formData.image && typeof formData.image === 'object')); // Check if a new image is selected
+        (formData.image && typeof formData.image === 'object'));
 
-    return !hasErrors && hasChanges; // Form is valid if no errors and changes exist
+    return !hasErrors && hasChanges;
   };
 
   return (
     <div className={styles.editFlat}>
       <h2>Edit Flat</h2>
-      {/* Add encType in order to send new file name */}
-      <Form method="post" className={styles.form} encType="multipart/form-data">
-        {/* Ad Title */}
+      <Form method="post" action="." className={styles.form} encType="multipart/form-data">
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="adTitle">Ad Title:</label>
@@ -186,7 +183,6 @@ const EditFlat: React.FC = () => {
           {fieldErrors.adTitle && <p className={styles.error}>{fieldErrors.adTitle}</p>}
         </div>
 
-        {/* City */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="city">City:</label>
@@ -195,7 +191,6 @@ const EditFlat: React.FC = () => {
           {fieldErrors.city && <p className={styles.error}>{fieldErrors.city}</p>}
         </div>
 
-        {/* Street Name */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="streetName">Street Name:</label>
@@ -204,16 +199,14 @@ const EditFlat: React.FC = () => {
           {fieldErrors.streetName && <p className={styles.error}>{fieldErrors.streetName}</p>}
         </div>
 
-        {/* Street Number */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="streetNumber">Street Number:</label>
-            <input id="streetNumber" name="streetNumber" type="number" value={formData.streetNumber || ''} onChange={handleChange} onBlur={handleBlur} required />
+            <input id="streetNumber" name="streetNumber" type="text" value={formData.streetNumber || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.streetNumber && <p className={styles.error}>{fieldErrors.streetNumber}</p>}
         </div>
 
-        {/* Area Size */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="areaSize">Area Size (m²):</label>
@@ -222,7 +215,6 @@ const EditFlat: React.FC = () => {
           {fieldErrors.areaSize && <p className={styles.error}>{fieldErrors.areaSize}</p>}
         </div>
 
-        {/* Year Built */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="yearBuilt">Year Built:</label>
@@ -231,7 +223,6 @@ const EditFlat: React.FC = () => {
           {fieldErrors.yearBuilt && <p className={styles.error}>{fieldErrors.yearBuilt}</p>}
         </div>
 
-        {/* Rent Price */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="rentPrice">Rent Price (€):</label>
@@ -240,7 +231,6 @@ const EditFlat: React.FC = () => {
           {fieldErrors.rentPrice && <p className={styles.error}>{fieldErrors.rentPrice}</p>}
         </div>
 
-        {/* Date Available */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="dateAvailable">Date Available:</label>
@@ -249,7 +239,6 @@ const EditFlat: React.FC = () => {
           {fieldErrors.dateAvailable && <p className={styles.error}>{fieldErrors.dateAvailable}</p>}
         </div>
 
-        {/* Has AC */}
         <div className={styles.formGroup}>
           <div className={`${styles.inputContainer} ${styles.inputContainerCheckbox}`}>
             <label htmlFor="hasAC">Has AC:</label>
@@ -257,26 +246,29 @@ const EditFlat: React.FC = () => {
           </div>
         </div>
 
-        {/* Flat Image */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="image">Flat Image:</label>
             <input id="image" name="image" type="file" accept="image/*" onChange={handleChange} />
           </div>
-          {/* Preview New Image */}
+          {formData.image && typeof formData.image === 'string' && (
+            <div className={styles.imagePreview}>
+              <p>Current Image:</p>
+              <img src={formData.image} alt="Current Flat" style={{ width: '200px' }} />
+            </div>
+          )}
           {formData.image && typeof formData.image === 'object' && (
-            <div className={styles.newImagePreview}>
+            <div className={styles.imagePreview}>
               <p>New Image Preview:</p>
               <img src={URL.createObjectURL(formData.image)} alt="New Flat" style={{ width: '200px' }} />
             </div>
           )}
+
           {fieldErrors.image && <p className={styles.error}>{fieldErrors.image}</p>}
         </div>
 
-        {/*For General Errors */}
         {generalError && <p className={styles.error}>{generalError}</p>}
 
-        {/* Submit and Back Buttons */}
         <button type="submit" className={styles.saveButton} disabled={!isFormValid()}>
           Save
         </button>

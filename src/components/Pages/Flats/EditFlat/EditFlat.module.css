@@ -102,7 +102,7 @@ select:focus {
     background-color: #e64b40;
 }
 
-.newImagePreview {
+.imagePreview {
     margin-top: 1rem;
     text-align: center;
     padding: 0.5rem;
@@ -112,14 +112,14 @@ select:focus {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.newImagePreview p {
+.imagePreview p {
     margin-bottom: 0.5rem;
     font-weight: bold;
     color: #333;
     font-size: 1rem;
 }
 
-.newImagePreview img {
+.imagePreview img {
     width: 100%;
     max-width: 200px;
     height: auto;
@@ -180,7 +180,7 @@ select:focus {
         padding: 0.6rem;
     }
 
-    .newImagePreview img {
+    .imagePreview img {
         max-width: 100%;
     }
 }

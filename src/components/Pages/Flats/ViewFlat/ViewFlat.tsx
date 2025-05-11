@@ -1,94 +1,93 @@
 import React, { useState } from 'react';
-import { useLoaderData, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { useLoaderData, Outlet, useNavigate, useLocation, redirect } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import axios from './../../../../api/axiosConfig';
 import { BsFillEnvelopeFill, BsFillEnvelopeSlashFill } from 'react-icons/bs';
 import { FaHome, FaEdit } from 'react-icons/fa';
-import { db } from '../../../../../firebase';
-import { Flat } from '../../../../types/Flat';
 import styles from './ViewFlat.module.css';
 import Spinner from '../../../Shared/Spinner/Spinner';
-
-interface LoaderParams {
-  params: {
-    flatID: string;
-  };
-}
+import type { LoaderFunctionArgs } from 'react-router-dom';
 
 // Loader function to fetch flat details based on flatID
-export const viewFlatLoader = async ({ params }: LoaderParams): Promise<Flat | Response> => {
-  const flatID = params.flatID; // Extract flat ID from route params
+export const viewFlatLoader = async ({ params }: LoaderFunctionArgs) => {
+  const token = Cookies.get('token');
+  if (!token) return redirect('/login');
+
   try {
-    const flatDoc = await getDoc(doc(db, 'flats', flatID)); // Fetch flat document from Firestore
-    if (!flatDoc.exists()) {
-      throw new Error('Flat not found'); // Handle missing flat case
-    }
+    const { data } = await axios.get(`/flats/${params.flatID}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    // Ensure all required fields are included and cast properly
-    const flatData = flatDoc.data();
-    if (!flatData) throw new Error('Invalid flat data');
-
+    const flat = data.data;
     return {
-      id: flatID,
-      adTitle: flatData.adTitle,
-      city: flatData.city,
-      streetName: flatData.streetName,
-      streetNumber: flatData.streetNumber,
-      areaSize: flatData.areaSize,
-      hasAC: flatData.hasAC,
-      yearBuilt: flatData.yearBuilt,
-      rentPrice: flatData.rentPrice,
-      dateAvailable: flatData.dateAvailable,
-      image: flatData.image,
-      ownerID: flatData.ownerID,
-      createdAt: flatData.createdAt,
-      updatedAt: flatData.updatedAt,
-      isFavorite: flatData.isFavorite, // Optional field
-    } as Flat;
+      id: flat._id,
+      adTitle: flat.adTitle,
+      city: flat.city,
+      streetName: flat.streetName,
+      streetNumber: flat.streetNumber,
+      areaSize: flat.areaSize,
+      hasAC: flat.hasAC,
+      yearBuilt: flat.yearBuilt,
+      rentPrice: flat.rentPrice,
+      dateAvailable: flat.dateAvailable,
+      image: flat.image?.url,
+      ownerID: flat.owner._id,
+      createdAt: flat.createdAt,
+      updatedAt: flat.updatedAt,
+    };
   } catch (error) {
     console.error('Error fetching flat data:', error);
-    throw new Response('Failed to fetch flat data.', { status: 404 }); // Return 404 response for errors
+    throw new Response('Failed to fetch flat data.', { status: 404 });
   }
 };
 
-// Component to view flat details
 const ViewFlat: React.FC = () => {
-  const flatData = useLoaderData() as Omit<Flat, 'id'> & { id: string };
+  const flatData = useLoaderData() as any;
   const navigate = useNavigate();
   const location = useLocation();
-  const loggedInUserId = localStorage.getItem('loggedInUser'); // Get logged-in user ID from localStorage
+  const [showMessages, setShowMessages] = useState(location.pathname.endsWith('/messages'));
 
-  const isOnMessagesRoute = location.pathname.endsWith('/messages'); // Determine if the current route is the messages route
-  const [showMessages, setShowMessages] = useState(isOnMessagesRoute); // State to toggle messages visibility
+  const token = Cookies.get('token');
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Show a loading spinner if flat data is not yet loaded
-  if (!flatData) {
-    return <Spinner />;
-  }
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) return;
+      try {
+        const { data } = await axios.get('/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserId(data.currentUser._id);
+      } catch (err) {
+        console.error('Failed to load user:', err);
+      }
+    };
+    fetchUser();
+  }, [token]);
 
-  // Destructure flat data for easier access
+  if (!flatData) return <Spinner />;
+
   const { id, adTitle, city, streetName, streetNumber, areaSize, hasAC, yearBuilt, rentPrice, dateAvailable, image, ownerID } = flatData;
 
-  // Handle toggling of messages visibility
   const handleToggleMessages = () => {
     if (showMessages) {
-      navigate(`/flats/view/${id}`); // Navigate to flat view without messages
+      navigate(`/flats/view/${id}`);
       setShowMessages(false);
     } else {
-      navigate('messages'); // Navigate to messages route
+      navigate('messages');
       setShowMessages(true);
     }
   };
 
   return (
     <>
-      {/* Flat data */}
       <div className={styles.viewFlat}>
         <div className={styles.header}>
           <h2>{adTitle}</h2>
         </div>
         <div className={styles.flatDetails}>
           <div className={styles.imageContainer}>
-            <img src={`/flats/${image}`} alt={adTitle} className={styles.flatImage} />
+            <img src={image} alt={adTitle} className={styles.flatImage} />
           </div>
           <div className={styles.detailsContainer}>
             <p>
@@ -116,26 +115,18 @@ const ViewFlat: React.FC = () => {
               <strong>Date Available:</strong> {new Date(dateAvailable).toLocaleDateString()}
             </p>
 
-            {/* Icons for navigation and actions */}
             <div className={styles.icons}>
-              {/* Navigate back to homepage */}
-              <FaHome className={styles.backToHomepage} title="Back to Homepage" aria-label="Back to Homepage" onClick={() => navigate('/')} />
-
-              {/* Toggle messages visibility */}
+              <FaHome className={styles.backToHomepage} title="Back to Homepage" onClick={() => navigate('/')} />
               {showMessages ? (
-                <BsFillEnvelopeSlashFill className={`${styles.envelopeIcon} ${styles.active}`} title="Hide Messages" aria-label="Hide Messages" onClick={handleToggleMessages} />
+                <BsFillEnvelopeSlashFill className={`${styles.envelopeIcon} ${styles.active}`} title="Hide Messages" onClick={handleToggleMessages} />
               ) : (
-                <BsFillEnvelopeFill className={styles.envelopeIcon} title="Show Messages" aria-label="Show Messages" onClick={handleToggleMessages} />
+                <BsFillEnvelopeFill className={styles.envelopeIcon} title="Show Messages" onClick={handleToggleMessages} />
               )}
-
-              {/* Edit flat option (only visible to the owner) */}
-              {loggedInUserId === ownerID && <FaEdit className={styles.editFlat} title="Edit Flat" aria-label="Edit Flat" onClick={() => navigate(`/flats/edit/${id}`)} />}
+              {userId === ownerID && <FaEdit className={styles.editFlat} title="Edit Flat" onClick={() => navigate(`/flats/edit/${id}`)} />}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Messages outlet */}
       <div className={showMessages ? styles.visible : styles.hidden}>
         <Outlet context={{ flatID: id, ownerID }} />
       </div>

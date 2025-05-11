@@ -191,13 +191,11 @@ const Home: React.FC = () => {
           <label>Price Range:</label>
           <input type="number" name="minPrice" value={pendingFilters.minPrice} onChange={handleFilterChange} placeholder="Min (€)" />
           <input type="number" name="maxPrice" value={pendingFilters.maxPrice} onChange={handleFilterChange} placeholder="Max (€)" />
-          {validationErrors.price && <p className={styles.error}>{validationErrors.price}</p>}
         </div>
         <div className={styles.filterGroup}>
           <label>Area Size (m²):</label>
           <input type="number" name="minArea" value={pendingFilters.minArea} onChange={handleFilterChange} placeholder="Min" />
           <input type="number" name="maxArea" value={pendingFilters.maxArea} onChange={handleFilterChange} placeholder="Max" />
-          {validationErrors.area && <p className={styles.error}>{validationErrors.area}</p>}
         </div>
         <button onClick={applyFilters} className={styles.applyButton} disabled={Object.keys(validationErrors).length > 0}>
           Apply Filters
@@ -205,6 +203,10 @@ const Home: React.FC = () => {
         <button onClick={resetFilters} className={styles.resetButton}>
           Reset Filters
         </button>
+      </div>
+      <div className={styles.filterErrors}>
+        {validationErrors.price && <p className={styles.error}>{validationErrors.price}</p>}
+        {validationErrors.area && <p className={styles.error}>{validationErrors.area}</p>}
       </div>
 
       <div className={styles.sort}>

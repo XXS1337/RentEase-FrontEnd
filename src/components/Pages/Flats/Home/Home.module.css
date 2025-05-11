@@ -50,6 +50,18 @@
     outline: none;
 }
 
+.filterErrors {
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.error {
+    color: red;
+    font-size: 0.875rem;
+}
+
 /* Sort Section */
 .sort {
     width: 100%;

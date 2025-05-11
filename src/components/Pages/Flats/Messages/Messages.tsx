@@ -1,9 +1,10 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
-import { useLoaderData, useActionData, Form, useSubmit, useOutletContext } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
-import { db } from '../../../../../firebase';
+import React, { useEffect, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { useLoaderData, useActionData, Form, useSubmit, useOutletContext, redirect, type LoaderFunctionArgs, type ActionFunctionArgs } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import axios from './../../../../api/axiosConfig';
 import { validateField } from '../../../../utils/validateField';
-import Message from '../../../../types/Message';
+import type Message from '../../../../types/Message';
 import styles from './Messages.module.css';
 
 interface CurrentUser {
@@ -14,8 +15,8 @@ interface CurrentUser {
 
 interface LoaderData {
   messages: Message[];
-  loggedInUserId: string;
   isOwner: boolean;
+  userCanMessage: boolean;
 }
 
 interface ActionData {
@@ -29,114 +30,82 @@ interface ContextData {
   ownerID: string;
 }
 
-interface LoaderParams {
-  params: {
-    flatID: string;
-  };
-}
-
-// Loader function to fetch messages and determine user permissions
-export const messagesLoader = async ({ params }: LoaderParams): Promise<LoaderData> => {
-  const { flatID } = params; // Extract the flat ID from the route params
-  const loggedInUserId = localStorage.getItem('loggedInUser') || ''; // Get the logged-in user ID
+// Loader to fetch messages from backend
+export const messagesLoader = async ({ params }: LoaderFunctionArgs): Promise<LoaderData | Response> => {
+  const token = Cookies.get('token');
+  if (!token) return redirect('/login');
+  const flatID = params.flatID;
+  if (!flatID) return redirect('/');
 
   try {
-    const flatDoc = await getDoc(doc(db, 'flats', flatID)); // Fetch the flat document
-    if (!flatDoc.exists()) {
-      throw new Error('Flat not found');
-    }
-    const flatData = flatDoc.data();
-    const isOwner = loggedInUserId === flatData.ownerID; // Determine if the user is the flat owner
+    await axios.get('/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    // Query messages based on user role (owner sees all, others see only their messages)
-    const messagesQuery = isOwner ? query(collection(db, 'messages'), where('flatID', '==', flatID)) : query(collection(db, 'messages'), where('flatID', '==', flatID), where('senderId', '==', loggedInUserId));
+    const { data: msgRes } = await axios.get(`/flats/${flatID}/messages`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    const snapshot = await getDocs(messagesQuery); // Fetch the messages
+    const isOwner = msgRes.meta?.isOwner || false;
+    const userCanMessage = msgRes.meta?.userCanMessage || false;
+    const messages = msgRes.data
+      .map((msg: any) => ({
+        id: msg._id,
+        flatID,
+        senderId: msg.senderId,
+        content: msg.content,
+        creationTime: new Date(msg.createdAt).toLocaleString(),
+        // fallback if backend doesn't return name/email
+        senderName: msg.senderName,
+        senderEmail: msg.senderEmail,
+      }))
+      .sort((a: Message, b: Message) => Date.parse(a.creationTime) - Date.parse(b.creationTime));
 
-    let messages = await Promise.all(
-      snapshot.docs.map(async (docSnap) => {
-        const data = docSnap.data();
-        let creationTime = 'Unknown Time';
-        if (data.creationTime) {
-          creationTime = data.creationTime.toDate().toLocaleString(); // Convert Firestore Timestamp to Date
-        }
-
-        // Fetch sender details
-        let senderName = 'Unknown User';
-        let senderEmail = 'Unknown Email';
-        if (data.senderId) {
-          const userDocRef = doc(db, 'users', data.senderId);
-          const userSnap = await getDoc(userDocRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            const firstName = userData.firstName || 'Unknown';
-            const lastName = userData.lastName || 'User';
-            senderName = `${firstName} ${lastName}`;
-            senderEmail = userData.email || 'Unknown Email';
-          }
-        }
-
-        return {
-          id: docSnap.id,
-          flatID,
-          senderId: data.senderId || '',
-          content: data.content || '',
-          creationTime,
-          senderName,
-          senderEmail,
-        };
-      })
-    );
-
-    // Sort messages chronologically by creationTime
-    messages = messages.sort((a, b) => new Date(a.creationTime).getTime() - new Date(b.creationTime).getTime());
-
-    // Format creationTime to a readable string for display
-    messages = messages.map((msg) => ({
-      ...msg,
-      creationTime: msg.creationTime.toLocaleString(),
-    }));
-
-    return { messages, loggedInUserId, isOwner }; // Return fetched data
-  } catch (error) {
+    return { messages, isOwner, userCanMessage };
+  } catch (error: any) {
     console.error('Error loading messages:', error);
-    return { messages: [], loggedInUserId, isOwner: false }; // Return empty data on failure
+
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      return redirect('/login');
+    }
+
+    if (status === 403) {
+      return { messages: [], isOwner: false, userCanMessage: true };
+    }
+
+    throw new Response('Unexpected error loading messages', { status: 500 });
   }
 };
 
-// Action to handle sending a new message
-export const messagesAction = async ({ request, params }: { request: Request; params: { flatID: string } }): Promise<ActionData> => {
-  const formData = await request.formData(); // Parse the submitted form data
-  const flatID = params.flatID; // Extract the flat ID from route params
-  const loggedInUserId = localStorage.getItem('loggedInUser'); // Get the logged-in user ID
-  const content = formData.get('messageContent') as string; // Get the message content
+export const messagesAction = async ({ request, params }: ActionFunctionArgs): Promise<ActionData> => {
+  const token = Cookies.get('token');
+  if (!token) return { error: 'Not authenticated' };
 
-  // Validate message content
-  if (!content || !content.trim()) {
-    return { error: 'Message content cannot be empty.' };
-  }
+  const formData = await request.formData();
+  const content = formData.get('messageContent') as string;
+  const flatID = params.flatID;
+
+  if (!flatID || !content?.trim()) return { error: 'Message content cannot be empty.' };
 
   try {
-    // Create a new message object
-    const messageData = {
-      flatID,
-      senderId: loggedInUserId,
-      content: content.trim(),
-      creationTime: Timestamp.now(), // Firestore timestamp
-    };
+    const { data } = await axios.post(
+      `/flats/${flatID}/messages`,
+      { content },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-    // Save the new message to Firestore and get the document reference
-    const docRef = await addDoc(collection(db, 'messages'), messageData);
-
-    // Return success response with the new message data and Firestore-generated ID
     return {
       success: true,
       message: {
-        id: docRef.id,
+        id: data.data._id,
         flatID,
-        senderId: loggedInUserId || '',
-        content: content.trim(),
-        creationTime: Timestamp.now().toDate().toISOString(), // Ensure compatibility
+        senderId: data.data.senderId,
+        content: data.data.content,
+        creationTime: new Date(data.data.createdAt || Date.now()).toLocaleString(),
       },
     };
   } catch (error) {
@@ -145,49 +114,40 @@ export const messagesAction = async ({ request, params }: { request: Request; pa
   }
 };
 
-// Messages component to display and send messages
 const Messages: React.FC = () => {
-  const { flatID, ownerID } = useOutletContext<ContextData>(); // Get context data (flat and owner IDs)
-  const { messages: initialMessages, loggedInUserId } = useLoaderData<LoaderData>(); // Load initial messages and user ID
+  const { flatID } = useOutletContext<ContextData>();
+  const { messages: initialMessages, isOwner, userCanMessage } = useLoaderData() as LoaderData;
   const actionData = useActionData<ActionData>();
-  const [messages, setMessages] = useState<Message[]>(initialMessages || []); // State for messages
-  const [newMessage, setNewMessage] = useState(''); // State for the new message input
-  const [error, setError] = useState(''); // State for client-side validation errors
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null); // State for current user details
-  const isOwner = loggedInUserId === ownerID; // Determine if the logged-in user is the owner
-  const submit = useSubmit(); // Submit hook for form submission
+  const [messages, setMessages] = useState<Message[]>(initialMessages || []);
+  const [newMessage, setNewMessage] = useState('');
+  const [error, setError] = useState('');
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const submit = useSubmit();
 
-  // Fetch the current user's details
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      if (!loggedInUserId) return; // Early return if no user is logged in
+    const fetchUser = async () => {
+      const token = Cookies.get('token');
+      if (!token) return;
       try {
-        const userRef = doc(db, 'users', loggedInUserId);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          // Ensure the data matches CurrentUser
-          if ('firstName' in userData && 'lastName' in userData && 'email' in userData) {
-            setCurrentUser(userData as CurrentUser); // Safely cast to CurrentUser
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching logged-in user details:', err);
+        const { data } = await axios.get('/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCurrentUser(data.currentUser);
+      } catch (error) {
+        console.error('Error fetching current user:', error);
       }
     };
+    fetchUser();
+  }, []);
 
-    fetchCurrentUser();
-  }, [loggedInUserId]);
-
-  // Handle action data updates (e.g., new messages or errors)
   useEffect(() => {
     if (actionData?.success && actionData.message) {
       const newMsg: Message = {
         id: actionData.message.id || '',
         flatID,
-        senderId: loggedInUserId,
+        senderId: actionData.message.senderId || '',
         content: actionData.message.content || '',
-        creationTime: new Date().toLocaleString(),
+        creationTime: actionData.message.creationTime || new Date().toLocaleString(),
         senderName: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'You',
         senderEmail: currentUser?.email || '—',
       };
@@ -197,23 +157,19 @@ const Messages: React.FC = () => {
     } else if (actionData?.error) {
       setError(actionData.error);
     }
-  }, [actionData, currentUser, loggedInUserId, flatID]);
-
-  // Handle changes to the textarea value
+  }, [actionData, currentUser, flatID]);
 
   const handleInputChange = async (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    setNewMessage(value); // Update the new message state
-
+    setNewMessage(value);
     if (value.trim()) {
       const error = await validateField('messageContent', value);
-      setError(error); // Display error message
+      setError(error);
     } else {
-      setError(''); // Clear errors if input is valid
+      setError('');
     }
   };
 
-  // Validate message content on blur
   const handleBlur = async () => {
     const error = await validateField('messageContent', newMessage);
     setError(error);
@@ -222,14 +178,12 @@ const Messages: React.FC = () => {
   return (
     <div className={styles.messages}>
       <h3>Messages</h3>
-
-      {/* Message list */}
       <div className={styles.messageList}>
         {messages.length > 0 ? (
           messages.map((msg) => (
             <div key={msg.id} className={styles.message}>
               <p>
-                <strong>From:</strong> {msg.senderName && msg.senderEmail ? `${msg.senderName} (${msg.senderEmail})` : msg.senderId === loggedInUserId ? 'You' : msg.senderId}
+                <strong>From:</strong> {msg.senderName} ({msg.senderEmail})
               </p>
               <p>
                 <strong>Sent:</strong> {msg.creationTime}
@@ -244,8 +198,7 @@ const Messages: React.FC = () => {
         )}
       </div>
 
-      {/* New message form (only for non-owners) */}
-      {!isOwner && (
+      {!isOwner && userCanMessage && (
         <Form
           method="post"
           onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
