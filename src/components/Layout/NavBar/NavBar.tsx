@@ -43,7 +43,7 @@ const NavBar: React.FC = () => {
 
         <div className={styles.userGreeting}>
           Hello, {user ? `${user.firstName} ${user.lastName}` : 'Guest'}
-          {user?.isAdmin && ' (Admin)'}!
+          {user?.role === 'admin' && ' (Admin)'}!
         </div>
       </div>
 
@@ -68,10 +68,10 @@ const NavBar: React.FC = () => {
             <NavLink to="/flats/new" className={({ isActive }) => (isActive ? styles.active : '')}>
               New Flat
             </NavLink>
-            <NavLink to={`/users/${user.id}`} className={({ isActive }) => (isActive ? styles.active : '')}>
+            <NavLink to={`/profile`} className={({ isActive }) => (isActive ? styles.active : '')}>
               My Profile
             </NavLink>
-            {user?.isAdmin && (
+            {user?.role === 'admin' && (
               <NavLink to="/admin/all-users" className={({ isActive }) => (isActive ? styles.active : '')}>
                 All Users
               </NavLink>

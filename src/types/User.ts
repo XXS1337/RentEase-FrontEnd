@@ -6,7 +6,7 @@ export default interface User {
   lastName: string; // User's last name
   email: string; // User's email address
   birthDate?: string; // Optional: User's date of birth in YYYY-MM-DD format
-  isAdmin?: boolean; // Optional: Whether the user has administrative privileges
   password?: string; // Optional: User's password (hashed for security)
   createdAt?: string; // Optional: Timestamp when the account was created
+  role: 'user' | 'admin';
 }

@@ -7,6 +7,7 @@ import type User from './../types/User';
 // Define the shape of the AuthContext
 type AuthContextType = {
   user: User | null; // The currently logged-in user or null
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean; // Indicates if the auth state is being initialized
   login: (userData: User, token: string) => void; // Function to log in a user
   logout: () => void; // Function to log out the user
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await axios.get('/users/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(data.currentUser as User); // Make sure the backend returns expected structure
+        setUser(data.currentUser as User);
       } catch (error) {
         console.error('Error loading user:', error);
         Cookies.remove('token'); // Remove token if invalid
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
 
   // Provide context values to children components
-  return <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, setUser, loading, login, logout, isAuthenticated }}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook for accessing the AuthContext

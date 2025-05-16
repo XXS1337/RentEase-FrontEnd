@@ -15,7 +15,8 @@ import Messages, { messagesLoader, messagesAction } from './components/Pages/Fla
 import EditFlat, { editFlatLoader, editFlatAction } from './components/Pages/Flats/EditFlat/EditFlat';
 import NewFlat, { newFlatAction } from './components/Pages/Flats/NewFlat/NewFlat';
 import MyProfile, { myProfileLoader, myProfileAction } from './components/User/MyProfile/MyProfile';
-// import AllUsers, { allUsersLoader } from './components/Pages/Admin/AllUsers/AllUsers';
+import AllUsers, { allUsersLoader } from './components/Pages/Admin/AllUsers/AllUsers';
+import EditUser, { editUserLoader, editUserAction } from './components/Pages/Admin/EditUser/EditUser';
 
 // Router configuration
 const router = createBrowserRouter([
@@ -105,7 +106,7 @@ const router = createBrowserRouter([
       },
       {
         // User profile page route
-        path: 'users/:userID',
+        path: 'profile',
         element: <ProtectedRoute />,
         children: [
           {
@@ -116,18 +117,25 @@ const router = createBrowserRouter([
           },
         ],
       },
-      //   {
-      //     // Admin-specific routes
-      //     path: 'admin',
-      //     element: <ProtectedRoute adminOnly={true} />,
-      //     children: [
-      //       {
-      //         path: 'all-users',
-      //         element: <AllUsers />,
-      //         loader: allUsersLoader,
-      //       },
-      //     ],
-      // },
+      {
+        // Admin-specific routes
+        path: 'admin',
+        element: <ProtectedRoute adminOnly={true} />,
+        children: [
+          {
+            path: 'all-users',
+            element: <AllUsers />,
+            loader: allUsersLoader,
+          },
+          {
+            path: 'edit-user/:id',
+            element: <EditUser />,
+            loader: editUserLoader, // dacă faci pre-încărcare
+            action: editUserAction, // dacă trimiți formularul
+            errorElement: <ErrorPage />, // opțional
+          },
+        ],
+      },
       {
         // Catch-all for undefined routes
         path: '*',

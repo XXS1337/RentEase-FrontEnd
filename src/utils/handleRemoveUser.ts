@@ -21,7 +21,7 @@ const handleRemoveUser = async <T extends { id: string }>(userId: string, setUse
     });
 
     // Optional: update UI list if function provided
-    if (setUsers) {
+    if (setUsers && !isSelf) {
       setUsers((prevUsers) => prevUsers.filter((u) => u.id !== userId));
     }
   } catch (error: any) {

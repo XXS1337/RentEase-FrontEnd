@@ -19,7 +19,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ adminOnly = false }) =>
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (adminOnly && !user.isAdmin) {
+  if (adminOnly && user.role !== 'admin') {
     return <ErrorPage />;
   }
 
