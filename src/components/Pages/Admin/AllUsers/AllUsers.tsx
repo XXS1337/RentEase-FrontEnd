@@ -1,18 +1,22 @@
-import React, { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import React, { useEffect, useState, type ChangeEvent } from 'react';
 import { useLoaderData, useNavigate, redirect } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from '../../../../api/axiosConfig';
-import calculateAge from '../../../../utils/calculateAge';
+import handleRemoveUser from '../../../../utils/handleRemoveUser';
 import Modal from '../../../Shared/Modal/Modal';
-import type User from '../../../../types/User';
 import styles from './AllUsers.module.css';
+import { useAuth } from '../../../../context/AuthContext';
 
-// Augmented types for enriched user data
-export type AugmentedUser = User & {
+interface AugmentedUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  birthDate: string;
   age: number;
   publishedFlatsCount: number;
-  isAdmin: boolean;
-};
+  role: string;
+}
 
 interface LoaderData {
   users: AugmentedUser[];
@@ -27,16 +31,7 @@ export const allUsersLoader = async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    console.log(response);
-    const users: AugmentedUser[] = response.data.map((user: any) => ({
-      ...user,
-      id: user._id,
-      age: user.birthDate ? calculateAge(new Date(user.birthDate)) : 0,
-      publishedFlatsCount: user.addedFlats?.length || 0,
-      isAdmin: user.role === 'admin',
-    }));
-
-    return { users } satisfies LoaderData;
+    return { users: response.data } satisfies LoaderData;
   } catch (err) {
     console.error('Failed to load users:', err);
     return redirect('/');
@@ -44,10 +39,11 @@ export const allUsersLoader = async () => {
 };
 
 const AllUsers: React.FC = () => {
-  const loaderData = useLoaderData() as LoaderData;
+  const { users: initialUsers } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
-  const [allUsersState, setAllUsersState] = useState<AugmentedUser[]>(loaderData.users);
-  const [users, setUsers] = useState<AugmentedUser[]>(loaderData.users);
+  const { user: currentUser, setUser } = useAuth();
+
+  const [users, setUsers] = useState<AugmentedUser[]>(initialUsers);
   const [filters, setFilters] = useState({
     userType: '',
     minAge: '',
@@ -56,13 +52,61 @@ const AllUsers: React.FC = () => {
     maxFlats: '',
   });
   const [sortOption, setSortOption] = useState('');
+  const [pendingFilters, setPendingFilters] = useState(filters);
   const [showModal, setShowModal] = useState({ isVisible: false, message: '' });
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const fetchUsers = async (appliedFilters = filters, sort = sortOption) => {
+    const token = Cookies.get('token');
+    const params: Record<string, string> = {};
+
+    if (appliedFilters.userType === 'admin') params.role = 'admin';
+    else if (appliedFilters.userType === 'regular') params.role = 'user';
+
+    if (appliedFilters.minAge || appliedFilters.maxAge) params.age = `${appliedFilters.minAge || 0}-${appliedFilters.maxAge || 120}`;
+    if (appliedFilters.minFlats || appliedFilters.maxFlats) params.flatsCount = `${appliedFilters.minFlats || 0}-${appliedFilters.maxFlats || 1000}`;
+    if (sort) params.sort = sort;
+
+    try {
+      const { data } = await axios.get('/users/allUsers', {
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      });
+      setUsers(data.data);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers(filters, sortOption);
+  }, [filters, sortOption]);
+
+  const handleFilterChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setPendingFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(e.target.value);
+  };
+
+  const applyFilters = () => {
+    setFilters(pendingFilters);
+  };
+
+  const resetFilters = () => {
+    const empty = { userType: '', minAge: '', maxAge: '', minFlats: '', maxFlats: '' };
+    setPendingFilters(empty);
+    setFilters(empty);
+    setSortOption('');
+  };
 
   const handleAdminToggle = async (userId: string, isAdmin: boolean) => {
     try {
       const token = Cookies.get('token');
       const newRole = isAdmin ? 'user' : 'admin';
+
       await axios.patch(
         `/users/updateRole/${userId}`,
         { role: newRole },
@@ -71,8 +115,15 @@ const AllUsers: React.FC = () => {
         }
       );
 
-      setAllUsersState((prev) => prev.map((user) => (user.id === userId ? { ...user, isAdmin: !isAdmin } : user)));
-      setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, isAdmin: !isAdmin } : user)));
+      // Dacă userId e al userului logat, actualizează contextul și redirecționează
+      if (currentUser?.id === userId && newRole === 'user') {
+        console.log('👤 You removed your own admin role. Redirecting to home...');
+        console.log('🔄 Updating user context:', { ...currentUser, role: 'user' });
+        setUser({ ...currentUser, role: 'user' });
+        navigate('/');
+      } else {
+        fetchUsers();
+      }
     } catch (err) {
       console.error('Failed to update role:', err);
     }
@@ -85,19 +136,10 @@ const AllUsers: React.FC = () => {
 
   const handleDeleteUser = async () => {
     if (!deleteTargetId) return;
-    try {
-      const token = Cookies.get('token');
-      await axios.delete(`/users/deleteProfile/${deleteTargetId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const updatedUsers = allUsersState.filter((user) => user.id !== deleteTargetId);
-      setAllUsersState(updatedUsers);
-      setUsers(updatedUsers);
-      setDeleteTargetId(null);
-      setShowModal({ isVisible: false, message: '' });
-    } catch (err) {
-      console.error('Failed to delete user:', err);
-    }
+    await handleRemoveUser(deleteTargetId);
+    fetchUsers();
+    setDeleteTargetId(null);
+    setShowModal({ isVisible: false, message: '' });
   };
 
   const cancelDelete = () => {
@@ -105,83 +147,14 @@ const AllUsers: React.FC = () => {
     setDeleteTargetId(null);
   };
 
-  const handleFilterChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const applyFilters = useCallback(() => {
-    let filtered = [...allUsersState];
-    const minAge = parseInt(filters.minAge);
-    const maxAge = parseInt(filters.maxAge);
-    const minFlats = parseInt(filters.minFlats);
-    const maxFlats = parseInt(filters.maxFlats);
-
-    if (filters.userType === 'admin') filtered = filtered.filter((u) => u.isAdmin);
-    else if (filters.userType === 'regular') filtered = filtered.filter((u) => !u.isAdmin);
-
-    if (!isNaN(minAge)) filtered = filtered.filter((u) => u.age >= minAge);
-    if (!isNaN(maxAge)) filtered = filtered.filter((u) => u.age <= maxAge);
-    if (!isNaN(minFlats)) filtered = filtered.filter((u) => u.publishedFlatsCount >= minFlats);
-    if (!isNaN(maxFlats)) filtered = filtered.filter((u) => u.publishedFlatsCount <= maxFlats);
-
-    setUsers(sortUsers(filtered, sortOption));
-  }, [filters, sortOption, allUsersState]);
-
-  const sortUsers = (list: AugmentedUser[], option: string) => {
-    const sorted = [...list];
-    switch (option) {
-      case 'firstNameAsc':
-        sorted.sort((a, b) => a.firstName.localeCompare(b.firstName));
-        break;
-      case 'firstNameDesc':
-        sorted.sort((a, b) => b.firstName.localeCompare(a.firstName));
-        break;
-      case 'lastNameAsc':
-        sorted.sort((a, b) => a.lastName.localeCompare(b.lastName));
-        break;
-      case 'lastNameDesc':
-        sorted.sort((a, b) => b.lastName.localeCompare(a.lastName));
-        break;
-      case 'flatsCountAsc':
-        sorted.sort((a, b) => a.publishedFlatsCount - b.publishedFlatsCount);
-        break;
-      case 'flatsCountDesc':
-        sorted.sort((a, b) => b.publishedFlatsCount - a.publishedFlatsCount);
-        break;
-    }
-    return sorted;
-  };
-
-  const resetFilters = () => {
-    const empty = { userType: '', minAge: '', maxAge: '', minFlats: '', maxFlats: '' };
-    setFilters(empty);
-    setSortOption('');
-    setUsers(allUsersState);
-  };
-
-  const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSortOption(value);
-    setUsers(sortUsers(users, value));
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') applyFilters();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [applyFilters]);
-
   return (
     <div className={styles.allUsers}>
       <h2>All Registered Users</h2>
 
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          <label htmlFor="userType">User Type:</label>
-          <select id="userType" name="userType" value={filters.userType} onChange={handleFilterChange}>
+          <label>User Type:</label>
+          <select name="userType" value={pendingFilters.userType} onChange={handleFilterChange}>
             <option value="">All</option>
             <option value="admin">Admin</option>
             <option value="regular">Regular</option>
@@ -189,13 +162,13 @@ const AllUsers: React.FC = () => {
         </div>
         <div className={styles.filterGroup}>
           <label>Age Range:</label>
-          <input name="minAge" type="number" value={filters.minAge} onChange={handleFilterChange} placeholder="Min" />
-          <input name="maxAge" type="number" value={filters.maxAge} onChange={handleFilterChange} placeholder="Max" />
+          <input name="minAge" type="number" value={pendingFilters.minAge} onChange={handleFilterChange} placeholder="Min" />
+          <input name="maxAge" type="number" value={pendingFilters.maxAge} onChange={handleFilterChange} placeholder="Max" />
         </div>
         <div className={styles.filterGroup}>
           <label>Flats Count:</label>
-          <input name="minFlats" type="number" value={filters.minFlats} onChange={handleFilterChange} placeholder="Min" />
-          <input name="maxFlats" type="number" value={filters.maxFlats} onChange={handleFilterChange} placeholder="Max" />
+          <input name="minFlats" type="number" value={pendingFilters.minFlats} onChange={handleFilterChange} placeholder="Min" />
+          <input name="maxFlats" type="number" value={pendingFilters.maxFlats} onChange={handleFilterChange} placeholder="Max" />
         </div>
         <button onClick={applyFilters} className={styles.applyButton}>
           Apply Filters
@@ -207,15 +180,15 @@ const AllUsers: React.FC = () => {
 
       <div className={styles.sort}>
         <div className={styles.sortContainer}>
-          <label htmlFor="sortOptions">Sort By:</label>
-          <select id="sortOptions" value={sortOption} onChange={handleSortChange}>
+          <label>Sort By:</label>
+          <select value={sortOption} onChange={handleSortChange}>
             <option value="">None</option>
-            <option value="firstNameAsc">First Name (A-Z)</option>
-            <option value="firstNameDesc">First Name (Z-A)</option>
-            <option value="lastNameAsc">Last Name (A-Z)</option>
-            <option value="lastNameDesc">Last Name (Z-A)</option>
-            <option value="flatsCountAsc">Flats Count (Asc)</option>
-            <option value="flatsCountDesc">Flats Count (Desc)</option>
+            <option value="firstName">First Name (A-Z)</option>
+            <option value="-firstName">First Name (Z-A)</option>
+            <option value="lastName">Last Name (A-Z)</option>
+            <option value="-lastName">Last Name (Z-A)</option>
+            <option value="publishedFlatsCount">Flats Count (Ascending)</option>
+            <option value="-publishedFlatsCount">Flats Count (Descending)</option>
           </select>
         </div>
       </div>
@@ -247,10 +220,19 @@ const AllUsers: React.FC = () => {
                 <td>{user.birthDate ? new Date(user.birthDate).toLocaleDateString('en-US') : 'N/A'}</td>
                 <td>{user.age}</td>
                 <td>{user.publishedFlatsCount}</td>
-                <td>{user.isAdmin ? 'Yes' : 'No'}</td>
+                <td>{user.role === 'admin' ? 'Yes' : 'No'}</td>
                 <td>
-                  <button onClick={() => navigate(`/admin/edit-user/${user.id}`)}>Edit</button>
-                  <button onClick={() => handleAdminToggle(user.id, user.isAdmin)}>{user.isAdmin ? 'Remove Admin' : 'Grant Admin'}</button>
+                  <button
+                    onClick={() => {
+                      console.log('User row ID:', user.id);
+                      console.log('Current user ID:', currentUser?.id);
+                      if (currentUser?.id === user.id) navigate('/profile');
+                      else navigate(`/admin/edit-user/${user.id}`);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button onClick={() => handleAdminToggle(user.id, user.role === 'admin')}>{user.role === 'admin' ? 'Remove Admin' : 'Grant Admin'}</button>
                   <button onClick={() => confirmDeleteUser(user.id)}>Delete</button>
                 </td>
               </tr>

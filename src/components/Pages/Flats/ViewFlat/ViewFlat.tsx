@@ -57,7 +57,7 @@ const ViewFlat: React.FC = () => {
         const { data } = await axios.get('/users/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUserId(data.currentUser._id);
+        setUserId(data.currentUser.id || data.currentUser._id);
       } catch (err) {
         console.error('Failed to load user:', err);
       }
@@ -112,7 +112,7 @@ const ViewFlat: React.FC = () => {
               <strong>Rent Price:</strong> {rentPrice} €/month
             </p>
             <p>
-              <strong>Date Available:</strong> {new Date(dateAvailable).toLocaleDateString()}
+              <strong>Date Available:</strong> {new Date(dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
             </p>
 
             <div className={styles.icons}>

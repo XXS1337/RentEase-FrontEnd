@@ -32,7 +32,7 @@ export const editFlatLoader = async ({ params }: LoaderFunctionArgs) => {
     }
 
     // 4. Format and return flat data
-    const formattedDate = flat.dateAvailable.split('T')[0];
+    const formattedDate = new Date(flat.dateAvailable).toISOString().split('T')[0];
 
     return {
       ...flat,
@@ -57,7 +57,7 @@ export const editFlatAction = async ({ request, params }: ActionFunctionArgs) =>
   try {
     const dateInput = formData.get('dateAvailable') as string;
     const [year, month, day] = dateInput.split('-').map(Number);
-    const isoDateUTC = new Date(Date.UTC(year, month - 1, day)).toISOString();
+    const timestampUTC = Date.UTC(year, month - 1, day);
 
     console.log('📅 Raw date input from form:', dateInput);
 
@@ -70,7 +70,7 @@ export const editFlatAction = async ({ request, params }: ActionFunctionArgs) =>
       hasAC: formData.get('hasAC') === 'on',
       yearBuilt: Number(formData.get('yearBuilt')),
       rentPrice: Number(formData.get('rentPrice')),
-      dateAvailable: isoDateUTC,
+      dateAvailable: timestampUTC,
     };
 
     const imageFile = formData.get('image') as File;

@@ -16,13 +16,15 @@ type ShowModalState = {
 };
 
 // Form data type for profile editing
-type FormData = Omit<User, 'id' | 'createdAt' | 'isAdmin' | 'password'> & {
+type FormData = Omit<User, 'id' | 'createdAt' | 'isAdmin' | 'password' | 'role'> & {
   password: string;
   confirmPassword: string;
 };
 
 // Type for form validation errors
 type FieldErrors = Partial<Record<keyof FormData | 'general', string>>;
+
+type ExtendedUser = User & { _id?: string };
 
 export const myProfileLoader = async () => {
   const token = Cookies.get('token');
@@ -137,7 +139,8 @@ const MyProfile: React.FC = () => {
     if (actionData?.success && !formData.password.trim()) {
       alert('Profile updated successfully!');
       setUser({
-        ...userData,
+        ...(userData as ExtendedUser),
+        id: userData.id || (userData as ExtendedUser)._id!,
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,

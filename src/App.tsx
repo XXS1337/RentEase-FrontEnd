@@ -130,9 +130,9 @@ const router = createBrowserRouter([
           {
             path: 'edit-user/:id',
             element: <EditUser />,
-            loader: editUserLoader, // dacă faci pre-încărcare
-            action: editUserAction, // dacă trimiți formularul
-            errorElement: <ErrorPage />, // opțional
+            loader: editUserLoader,
+            action: editUserAction,
+            errorElement: <ErrorPage />,
           },
         ],
       },

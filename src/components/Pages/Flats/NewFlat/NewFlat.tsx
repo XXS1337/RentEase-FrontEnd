@@ -21,8 +21,12 @@ export const newFlatAction = async ({ request }: { request: Request }) => {
   const hasAC = formData.get('hasAC') === 'on';
   const yearBuilt = formData.get('yearBuilt') as string;
   const rentPrice = formData.get('rentPrice') as string;
-  const dateAvailable = formData.get('dateAvailable') as string;
   const imageFile = formData.get('image') as File;
+
+  const dateAvailableRaw = formData.get('dateAvailable') as string;
+  const [y, m, d] = dateAvailableRaw.split('-').map(Number);
+  const dateAvailable = Date.UTC(y, m - 1, d); // milisecunde UTC
+  // const dateAvailable = `${dateAvailableRaw}T00:00:00.000Z`;
 
   const errors: FieldErrors = {};
   errors.adTitle = await validateField('adTitle', adTitle);
@@ -53,10 +57,7 @@ export const newFlatAction = async ({ request }: { request: Request }) => {
     uploadData.append('hasAC', String(hasAC));
     uploadData.append('yearBuilt', yearBuilt);
     uploadData.append('rentPrice', rentPrice);
-
-    const isoDate = `${dateAvailable}T00:00:00.000Z`;
-    uploadData.append('dateAvailable', isoDate);
-
+    uploadData.append('dateAvailable', dateAvailable.toString());
     uploadData.append('image', imageFile);
 
     await axios.post('/flats', uploadData, {
@@ -98,7 +99,6 @@ const NewFlat: React.FC = () => {
       setFormSubmitted(true);
       navigate('/myFlats');
     }
-
     if (actionData?.errors?.general) {
       setGeneralError(actionData.errors.general);
     }

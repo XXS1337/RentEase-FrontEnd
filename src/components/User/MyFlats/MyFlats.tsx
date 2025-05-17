@@ -87,7 +87,7 @@ const MyFlats: React.FC = () => {
                   <strong>Rent price:</strong> {flat.rentPrice} €/month
                 </p>
                 <p>
-                  <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
+                  <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
                 </p>
                 <FaRegTrashAlt className={styles.deleteFlat} onClick={() => handleDeleteFlat(flat.id)} title="Delete Flat" />
                 <FaEdit className={styles.editFlat} onClick={() => navigate(`/flats/edit/${flat.id}`)} title="Edit Flat" />

@@ -16,13 +16,13 @@ export const validateField = async (name: string, value: string | number | Date 
 
   switch (name) {
     case 'firstName':
-      if (!value || (typeof value === 'string' && value.length < 2)) {
-        error = 'First name must be at least 2 characters.';
-      }
-      break;
     case 'lastName':
-      if (!value || (typeof value === 'string' && value.length < 2)) {
-        error = 'Last name must be at least 2 characters.';
+      if (!value || typeof value !== 'string' || value.trim().length < 2) {
+        error = `${name === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters.`;
+      } else if (value.length > 50) {
+        error = `${name === 'firstName' ? 'First' : 'Last'} name must be at most 50 characters.`;
+      } else if (!/^[a-zA-ZăâîșțĂÂÎȘȚ -]+$/.test(value)) {
+        error = `${name === 'firstName' ? 'First' : 'Last'} name can only contain letters and spaces.`;
       }
       break;
     case 'email':
@@ -80,8 +80,8 @@ export const validateField = async (name: string, value: string | number | Date 
       }
       break;
     case 'streetNumber':
-      if (!value || isNaN(Number(value)) || Number(value) <= 0) {
-        error = 'Street number must be a valid positive number.';
+      if (!value || isNaN(Number(value)) || Number(value) < 1) {
+        error = 'Street number must be at least 1.';
       }
       break;
     case 'areaSize':
@@ -130,6 +130,8 @@ export const validateField = async (name: string, value: string | number | Date 
     case 'messageContent':
       if (!value || (typeof value === 'string' && !value.trim())) {
         error = 'Message content cannot be empty.';
+      } else if (typeof value === 'string' && value.length > 1000) {
+        error = 'Message cannot exceed 1000 characters.';
       }
       break;
     default:

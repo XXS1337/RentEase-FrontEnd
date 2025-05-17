@@ -11,7 +11,7 @@ const handleRemoveUser = async <T extends { id: string }>(userId: string, setUse
     const isSelf = userId === 'me';
 
     // Determine API endpoint
-    const endpoint = isSelf ? '/users/deleteMyProfile' : `/admin/deleteProfile/${userId}`;
+    const endpoint = isSelf ? '/users/deleteMyProfile' : `/users/deleteProfile/${userId}`;
 
     // Make DELETE request to backend
     await axios.delete(endpoint, {
@@ -20,7 +20,7 @@ const handleRemoveUser = async <T extends { id: string }>(userId: string, setUse
       },
     });
 
-    // Optional: update UI list if function provided
+    // Optional: update UI list if function provided and it's not self-deletion
     if (setUsers && !isSelf) {
       setUsers((prevUsers) => prevUsers.filter((u) => u.id !== userId));
     }

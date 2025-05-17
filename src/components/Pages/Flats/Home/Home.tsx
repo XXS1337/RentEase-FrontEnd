@@ -260,8 +260,9 @@ const Home: React.FC = () => {
                     <strong>Rent price:</strong> {flat.rentPrice} €/month
                   </p>
                   <p>
-                    <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
+                    <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
                   </p>
+
                   {flat.favorite ? (
                     <IoMdHeart
                       className={styles.filledHeart}

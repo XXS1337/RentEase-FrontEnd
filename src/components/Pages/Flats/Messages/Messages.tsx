@@ -212,7 +212,7 @@ const Messages: React.FC = () => {
           }}
           className={styles.newMessage}
         >
-          <textarea name="messageContent" placeholder="Write your message here..." value={newMessage} onChange={handleInputChange} onBlur={handleBlur} className={error ? styles.errorInput : ''} />
+          <textarea name="messageContent" placeholder="Write your message here..." maxLength={1000} value={newMessage} onChange={handleInputChange} onBlur={handleBlur} className={error ? styles.errorInput : ''} />
           {error && <p className={styles.error}>{error}</p>}
           <button type="submit" disabled={!newMessage.trim()}>
             Send Message

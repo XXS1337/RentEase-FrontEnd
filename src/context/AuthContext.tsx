@@ -14,6 +14,8 @@ type AuthContextType = {
   isAuthenticated: boolean; // Indicates if a user is logged in
 };
 
+type BackendUser = User & { _id: string };
+
 // Create the context with undefined as default to enforce use within a provider
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -36,7 +38,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await axios.get('/users/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(data.currentUser as User);
+        const transformedUser = { ...data.currentUser, id: data.currentUser._id };
+        setUser(transformedUser);
       } catch (error) {
         console.error('Error loading user:', error);
         Cookies.remove('token'); // Remove token if invalid
@@ -49,10 +52,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadUser(); // Invoke function
   }, []);
 
+  // 🔄 Periodic role or user existence check
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const token = Cookies.get('token');
+      if (!token) return;
+
+      try {
+        const { data } = await axios.get('/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUser((prevUser) => {
+          if (!data.currentUser) {
+            Cookies.remove('token');
+            return null;
+          }
+
+          if (prevUser && (prevUser.role !== data.currentUser.role || prevUser.email !== data.currentUser.email)) {
+            console.log('🔄 User context auto-updated from /users/me');
+            return { ...data.currentUser, id: data.currentUser._id };
+          }
+
+          return prevUser;
+        });
+      } catch (err: any) {
+        if (err?.response?.status === 401 || err?.response?.status === 404) {
+          console.log('🚨 User invalid or deleted. Logging out...');
+          Cookies.remove('token');
+          setUser(null);
+        }
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Log in function: saves token to cookies and sets user
   const login = (userData: User, token: string) => {
     Cookies.set('token', token, { expires: 1 }); // Expires in 1 day
-    setUser(userData);
+    setUser({ ...(userData as BackendUser), id: (userData as BackendUser)._id });
   };
 
   // Log out function: removes token and resets user
