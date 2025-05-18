@@ -115,6 +115,7 @@ const EditFlat: React.FC = () => {
   const [originalData, setOriginalData] = useState<Flat>(flatData);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (flatData) {
@@ -126,6 +127,7 @@ const EditFlat: React.FC = () => {
   useEffect(() => {
     if (actionData?.success) {
       alert('Flat updated successfully!');
+      setIsSubmitting(false);
       navigate('/myFlats');
     }
     if (actionData?.errors?.general) {
@@ -174,7 +176,7 @@ const EditFlat: React.FC = () => {
   return (
     <div className={styles.editFlat}>
       <h2>Edit Flat</h2>
-      <Form method="post" action="." className={styles.form} encType="multipart/form-data">
+      <Form method="post" action="." className={styles.form} encType="multipart/form-data" onSubmit={() => setIsSubmitting(true)}>
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="adTitle">Ad Title:</label>
@@ -269,8 +271,8 @@ const EditFlat: React.FC = () => {
 
         {generalError && <p className={styles.error}>{generalError}</p>}
 
-        <button type="submit" className={styles.saveButton} disabled={!isFormValid()}>
-          Save
+        <button type="submit" className={styles.saveButton} disabled={isSubmitting || !isFormValid()}>
+          {isSubmitting ? 'Saving...' : 'Save'}
         </button>
 
         <button type="button" className={styles.backButton} onClick={() => navigate('/myFlats')}>

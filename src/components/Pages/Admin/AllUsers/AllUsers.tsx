@@ -55,6 +55,8 @@ const AllUsers: React.FC = () => {
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [showModal, setShowModal] = useState({ isVisible: false, message: '' });
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const fetchUsers = async (appliedFilters = filters, sort = sortOption) => {
     const token = Cookies.get('token');
@@ -103,6 +105,7 @@ const AllUsers: React.FC = () => {
   };
 
   const handleAdminToggle = async (userId: string, isAdmin: boolean) => {
+    setUpdatingUserId(userId);
     try {
       const token = Cookies.get('token');
       const newRole = isAdmin ? 'user' : 'admin';
@@ -126,6 +129,8 @@ const AllUsers: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to update role:', err);
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -136,10 +141,18 @@ const AllUsers: React.FC = () => {
 
   const handleDeleteUser = async () => {
     if (!deleteTargetId) return;
-    await handleRemoveUser(deleteTargetId);
-    fetchUsers();
-    setDeleteTargetId(null);
-    setShowModal({ isVisible: false, message: '' });
+    setIsDeleting(true);
+    try {
+      await handleRemoveUser(deleteTargetId);
+      fetchUsers();
+      setDeleteTargetId(null);
+      setShowModal({ isVisible: false, message: '' });
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Failed to remove user. Please try again later.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const cancelDelete = () => {
@@ -232,7 +245,9 @@ const AllUsers: React.FC = () => {
                   >
                     Edit
                   </button>
-                  <button onClick={() => handleAdminToggle(user.id, user.role === 'admin')}>{user.role === 'admin' ? 'Remove Admin' : 'Grant Admin'}</button>
+                  <button onClick={() => handleAdminToggle(user.id, user.role === 'admin')} disabled={updatingUserId === user.id}>
+                    {updatingUserId === user.id ? 'Updating...' : user.role === 'admin' ? 'Remove Admin' : 'Grant Admin'}
+                  </button>
                   <button onClick={() => confirmDeleteUser(user.id)}>Delete</button>
                 </td>
               </tr>
@@ -241,7 +256,7 @@ const AllUsers: React.FC = () => {
         </tbody>
       </table>
 
-      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={cancelDelete} />}
+      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={cancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
     </div>
   );
 };

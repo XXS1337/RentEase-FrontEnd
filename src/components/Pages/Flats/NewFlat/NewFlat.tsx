@@ -25,8 +25,7 @@ export const newFlatAction = async ({ request }: { request: Request }) => {
 
   const dateAvailableRaw = formData.get('dateAvailable') as string;
   const [y, m, d] = dateAvailableRaw.split('-').map(Number);
-  const dateAvailable = Date.UTC(y, m - 1, d); // milisecunde UTC
-  // const dateAvailable = `${dateAvailableRaw}T00:00:00.000Z`;
+  const dateAvailable = Date.UTC(y, m - 1, d);
 
   const errors: FieldErrors = {};
   errors.adTitle = await validateField('adTitle', adTitle);
@@ -78,6 +77,7 @@ const NewFlat: React.FC = () => {
   const actionData = useActionData<{ success?: boolean; errors?: FieldErrors }>();
   const navigate = useNavigate();
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formData, setFormData] = useState<FormData>({
     adTitle: '',
@@ -97,10 +97,12 @@ const NewFlat: React.FC = () => {
     if (actionData?.success && !formSubmitted) {
       alert('Flat added successfully!');
       setFormSubmitted(true);
+      setIsSubmitting(false);
       navigate('/myFlats');
     }
     if (actionData?.errors?.general) {
       setGeneralError(actionData.errors.general);
+      setIsSubmitting(false);
     }
   }, [actionData, formSubmitted, navigate]);
 
@@ -131,7 +133,7 @@ const NewFlat: React.FC = () => {
     <div className={styles.newFlat}>
       <h2>Add New Flat</h2>
 
-      <Form method="post" encType="multipart/form-data" className={styles.form}>
+      <Form method="post" encType="multipart/form-data" className={styles.form} onSubmit={() => setIsSubmitting(true)}>
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="adTitle">Ad Title:</label>
@@ -219,8 +221,8 @@ const NewFlat: React.FC = () => {
 
         {generalError && <p className={styles.error}>{generalError}</p>}
 
-        <button type="submit" className={styles.saveButton} disabled={!isFormValid()}>
-          Save
+        <button type="submit" className={styles.saveButton} disabled={isSubmitting || !isFormValid()}>
+          {isSubmitting ? 'Saving...' : 'Save'}
         </button>
       </Form>
     </div>

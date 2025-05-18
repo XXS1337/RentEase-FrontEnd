@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import AppLayout from './components/Layout/AppLayout/AppLayout';
 import Home, { homeLoader } from './components/Pages/Flats/Home/Home';
 import Login, { loginAction } from './components/Auth/Login';
+import ForgotPassword, { forgotPasswordAction } from './components/Auth/ForgotPassword';
+import ResetPassword, { resetPasswordAction } from './components/Auth/ResetPassword';
 import ErrorPage from './components/ErrorPage/ErrorPage';
 import GuestRoute from './components/Shared/GuestRoute/GuestRoute';
 import ProtectedRoute from './components/Shared/ProtectedRoute/ProtectedRoute';
@@ -44,6 +46,16 @@ const router = createBrowserRouter([
             path: 'register',
             element: <Register />,
             action: registerAction,
+          },
+          {
+            path: 'forgot-password',
+            element: <ForgotPassword />,
+            action: forgotPasswordAction,
+          },
+          {
+            path: 'reset-password/:token',
+            element: <ResetPassword />,
+            action: resetPasswordAction,
           },
         ],
       },

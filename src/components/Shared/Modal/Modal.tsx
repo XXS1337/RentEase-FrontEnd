@@ -5,10 +5,12 @@ type ModalProps = {
   message: string;
   onYes: () => void;
   onNo: () => void;
+  yesText?: string;
+  yesDisabled?: boolean;
 };
 
 // Modal component for confirmation dialogs
-const Modal: React.FC<ModalProps> = ({ message, onYes, onNo }) => {
+const Modal: React.FC<ModalProps> = ({ message, onYes, onNo, yesText, yesDisabled }) => {
   // Function to handle "Escape" key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,8 +36,8 @@ const Modal: React.FC<ModalProps> = ({ message, onYes, onNo }) => {
           <button className={`${styles.modalButton} ${styles.modalButtonNo}`} onClick={onNo}>
             No
           </button>
-          <button className={`${styles.modalButton} ${styles.modalButtonYes}`} onClick={onYes}>
-            Yes
+          <button className={`${styles.modalButton} ${styles.modalButtonYes}`} onClick={onYes} disabled={yesDisabled}>
+            {yesText || 'Yes'}
           </button>
         </div>
       </div>

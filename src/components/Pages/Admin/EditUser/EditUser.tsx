@@ -28,7 +28,10 @@ export const editUserLoader = async ({ params }: LoaderFunctionArgs) => {
     const { data } = await axios.get(`/users/getUserById/${params.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return data;
+    return {
+      ...data,
+      id: data._id,
+    };
   } catch (error) {
     return redirect('/admin/all-users');
   }
@@ -106,6 +109,7 @@ const EditUser: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [showModal, setShowModal] = useState<ShowModalState>({ isVisible: false, message: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (userData) {
@@ -181,6 +185,7 @@ const EditUser: React.FC = () => {
   };
 
   const handleDeleteUser = async () => {
+    setIsDeleting(true);
     try {
       await handleRemoveUser(userData.id);
       alert('User deleted successfully!');
@@ -188,6 +193,7 @@ const EditUser: React.FC = () => {
     } catch (err) {
       console.error('Error deleting user:', err);
       alert('Failed to remove user. Please try again later.');
+      setIsDeleting(false);
     }
   };
 
@@ -281,7 +287,7 @@ const EditUser: React.FC = () => {
         Back to All Users
       </button>
 
-      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={handleCancelDelete} />}
+      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={handleCancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
     </div>
   );
 };

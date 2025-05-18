@@ -121,6 +121,7 @@ const MyProfile: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [showModal, setShowModal] = useState<ShowModalState>({ isVisible: false, message: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (userData) {
@@ -216,12 +217,14 @@ const MyProfile: React.FC = () => {
   };
 
   const handleDeleteAccount = async () => {
+    setIsDeleting(true);
     try {
       await handleRemoveUser('me');
       logout();
     } catch (err) {
       console.error('Error deleting user:', err);
       alert('Failed to remove user. Please try again later.');
+      setIsDeleting(false);
     }
   };
 
@@ -312,7 +315,7 @@ const MyProfile: React.FC = () => {
         Delete Account
       </button>
 
-      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteAccount} onNo={handleCancelDelete} />}
+      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteAccount} onNo={handleCancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
     </div>
   );
 };

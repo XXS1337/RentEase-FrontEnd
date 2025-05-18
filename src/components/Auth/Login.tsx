@@ -60,6 +60,11 @@ const Login: React.FC = () => {
 
     if (actionData?.errors?.general) {
       setGeneralError(actionData.errors.general);
+
+      // Resetează câmpurile doar dacă eroarea este legată de credentiale greșite
+      if (actionData.errors.general.toLowerCase().includes('invalid')) {
+        setFormData({ email: '', password: '' });
+      }
     }
   }, [actionData, navigate, login]);
 
@@ -74,6 +79,10 @@ const Login: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFieldErrors((prev) => ({ ...prev, [name]: null }));
     setGeneralError(null);
+  };
+
+  const isFormValid = () => {
+    return formData.email.trim() !== '' && formData.password.trim() !== '' && Object.values(fieldErrors).every((error) => !error);
   };
 
   return (
@@ -100,7 +109,9 @@ const Login: React.FC = () => {
 
         {generalError && <p className={styles.error}>{generalError}</p>}
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={!isFormValid()}>
+          Login
+        </button>
       </Form>
     </div>
   );
