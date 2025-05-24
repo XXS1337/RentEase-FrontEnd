@@ -178,6 +178,30 @@ const Home: React.FC = () => {
     setSortOption('');
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [applyFilters]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        applyFilters();
+      } else if (e.key === 'Escape') {
+        resetFilters();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [applyFilters, resetFilters]);
+
   return (
     <div className={styles.home}>
       <h2>Available Flats</h2>

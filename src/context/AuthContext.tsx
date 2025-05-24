@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return null;
           }
 
-          if (prevUser && (prevUser.role !== data.currentUser.role || prevUser.email !== data.currentUser.email)) {
+          if (prevUser && (prevUser.role !== data.currentUser.role || prevUser.email !== data.currentUser.email || prevUser.firstName !== data.currentUser.firstName || prevUser.lastName !== data.currentUser.lastName)) {
             console.log('🔄 User context auto-updated from /users/me');
             return { ...data.currentUser, id: data.currentUser._id };
           }

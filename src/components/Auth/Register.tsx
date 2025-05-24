@@ -91,11 +91,20 @@ const Register: React.FC = () => {
     const { name, value } = e.target;
 
     if (name === 'email') {
+      // 1 Validate email format
+      const formatError = await validateField('email', value);
+      if (formatError) {
+        setFieldErrors((prev) => ({ ...prev, email: formatError }));
+        return;
+      }
+
+      //2 If email format is ok, check if email is available
       setIsCheckingEmail(true);
+
       try {
         const res = await axios.post('/users/checkEmail', { email: value });
         const available = res.data?.available;
-        const error = available ? '' : 'This email is already taken. Please use another.';
+        const error = available ? '' : 'Email address not available.';
         setFieldErrors((prev) => ({ ...prev, email: error }));
       } catch (error) {
         setFieldErrors((prev) => ({ ...prev, email: 'Failed to check email availability. Please try again.' }));

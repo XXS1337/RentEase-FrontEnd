@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import Modal from '../../Shared/Modal/Modal';
 import styles from './NavBar.module.css';
@@ -13,12 +13,7 @@ type ShowModalState = {
 
 const NavBar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const [showModal, setShowModal] = useState<ShowModalState>({ isVisible: false, message: '' });
-
-  const goToHome = () => {
-    navigate('/');
-  };
 
   const logOut = () => {
     setShowModal({ isVisible: true, message: 'Are you sure you want to log out?' });
@@ -37,7 +32,9 @@ const NavBar: React.FC = () => {
     <div className={styles.navbar}>
       <div className={styles.navbarLeftSide}>
         <div className={styles.navbarLogo}>
-          <img src={my_logo} alt="Logo" onClick={goToHome} className={styles.clickableLogo} />
+          <a href="/" className={styles.navbarLink}>
+            <img src={my_logo} alt="Logo" />
+          </a>
           <h2 className={styles.navbarHeading}>Unlock the Door to Your Dream Flat!</h2>
         </div>
 

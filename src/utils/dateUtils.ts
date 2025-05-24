@@ -12,6 +12,18 @@ export const normalizeDate = (date: Date): Date => {
 };
 
 /**
+ * Function to normalize a given date to midnight UTC time.
+ * This ensures consistent comparisons with UTC-based timestamps such as those returned by Date.UTC().
+ *
+ * @param {Date | string} date - The date to be normalized. Can be a Date object or a date string.
+ * @returns {number} - The timestamp in milliseconds representing midnight (00:00:00) UTC of the provided date.
+ */
+export const normalizeDateUTC = (date: Date | string): number => {
+  const d = new Date(date); // Convert the input to a Date object
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); // Return the UTC timestamp at midnight
+};
+
+/**
  * Function to calculate the date one year from a given base date, subtracting one day.
  *
  * This function is useful for setting a valid date range, ensuring that the calculated

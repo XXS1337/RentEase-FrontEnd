@@ -1,5 +1,5 @@
 import calculateAge from './calculateAge';
-import { normalizeDate, getOneYearFromToday } from './dateUtils';
+import { normalizeDateUTC, getOneYearFromToday } from './dateUtils';
 import axios from '../api/axiosConfig';
 
 // Context type for additional validation context
@@ -106,18 +106,21 @@ export const validateField = async (name: string, value: string | number | Date 
       if (!value) {
         error = 'Date available is required.';
       } else {
-        const today = normalizeDate(new Date());
-        const selectedDate = normalizeDate(value as Date);
-        const originalDate = context.originalDate ? normalizeDate(context.originalDate) : today;
-        const oneYearFromToday = getOneYearFromToday(today);
+        const today = new Date();
+        const todayUTC = normalizeDateUTC(today);
+        const selectedUTC = typeof value === 'number' ? value : normalizeDateUTC(value as Date);
+        const originalUTC = context.originalDate ? normalizeDateUTC(context.originalDate) : todayUTC;
+        const oneYearFromTodayUTC = normalizeDateUTC(getOneYearFromToday(today));
 
         const isOutOfRange =
-          name === 'dateAvailable' ? selectedDate < today || selectedDate > oneYearFromToday : originalDate > today ? selectedDate < today || selectedDate > oneYearFromToday : selectedDate < originalDate || selectedDate > oneYearFromToday;
+          name === 'dateAvailable' ? selectedUTC < todayUTC || selectedUTC > oneYearFromTodayUTC : originalUTC > todayUTC ? selectedUTC < todayUTC || selectedUTC > oneYearFromTodayUTC : selectedUTC < originalUTC || selectedUTC > oneYearFromTodayUTC;
 
         if (isOutOfRange) {
-          error = `Date available must be between ${originalDate > today ? 'today' : 'the original date'} (${(originalDate > today ? today : originalDate).toLocaleDateString('en-US')}) and one year from today (${oneYearFromToday.toLocaleDateString(
-            'en-US'
-          )}).`;
+          const startLabel = originalUTC >= todayUTC ? 'today' : 'the original date';
+          const startDate = new Date(originalUTC > todayUTC ? todayUTC : originalUTC).toLocaleDateString('en-US');
+          const endDate = new Date(oneYearFromTodayUTC).toLocaleDateString('en-US');
+
+          error = `Date available must be between ${startLabel} (${startDate}) and one year from today (${endDate}).`;
         }
       }
       break;

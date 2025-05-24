@@ -138,12 +138,20 @@ const EditUser: React.FC = () => {
     let error = '';
 
     if (name === 'email') {
+      // 1 Validate email format
+      const formatError = await validateField('email', value);
+      if (formatError) {
+        setFieldErrors((prev) => ({ ...prev, email: formatError }));
+        return;
+      }
+
+      //2 If email format is ok, check if email is available
       setIsCheckingEmail(true);
       try {
         if (value !== userData.email) {
           const res = await axios.post('/users/checkEmail', { email: value });
           const available = res.data?.available;
-          error = available ? '' : 'This email is already taken. Please use another.';
+          error = available ? '' : 'Email address not available.';
         }
       } catch (err) {
         error = 'Failed to check email availability. Please try again.';
@@ -173,15 +181,14 @@ const EditUser: React.FC = () => {
 
   const isFormValid = () => {
     const hasErrors = Object.values(fieldErrors).some((error) => error);
-    const hasChanges =
-      formData.firstName !== userData.firstName ||
-      formData.lastName !== userData.lastName ||
-      formData.email !== userData.email ||
-      formData.birthDate !== (userData.birthDate?.split('T')[0] || '') ||
-      formData.password.trim() !== '' ||
-      formData.confirmPassword.trim() !== '';
+    const isPasswordChanged = formData.password.trim() !== '' || formData.confirmPassword.trim() !== '';
 
-    return !hasErrors && hasChanges && !isCheckingEmail;
+    const hasChanges = formData.firstName !== userData.firstName || formData.lastName !== userData.lastName || formData.email !== userData.email || formData.birthDate !== (userData.birthDate?.split('T')[0] || '') || isPasswordChanged;
+
+    // 👇 asigură-te că ambele câmpuri sunt completate dacă modifici parola
+    const passwordFieldsValid = !isPasswordChanged || (formData.password.trim() !== '' && formData.confirmPassword.trim() !== '');
+
+    return !hasErrors && hasChanges && passwordFieldsValid && !isCheckingEmail;
   };
 
   const handleDeleteUser = async () => {
