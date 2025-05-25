@@ -24,8 +24,10 @@ type FormData = Omit<User, 'id' | 'createdAt' | 'isAdmin' | 'password' | 'role'>
 // Type for form validation errors
 type FieldErrors = Partial<Record<keyof FormData | 'general', string>>;
 
+// Optional _id included for Mongo users
 type ExtendedUser = User & { _id?: string };
 
+// Loader to fetch current user profile
 export const myProfileLoader = async () => {
   const token = Cookies.get('token');
   if (!token) return redirect('/login');
@@ -41,12 +43,14 @@ export const myProfileLoader = async () => {
   }
 };
 
+// Action to update user profile (and optionally password)
 export const myProfileAction = async ({ request }: { request: Request }) => {
   const token = Cookies.get('token');
   if (!token) return redirect('/login');
 
   const formData = await request.formData();
 
+  // Extract and normalize field values
   const rawData = {
     firstName: formData.get('firstName') as string,
     lastName: formData.get('lastName') as string,
@@ -56,6 +60,7 @@ export const myProfileAction = async ({ request }: { request: Request }) => {
     birthDate: formData.get('birthDate') as string,
   };
 
+  // Validate input fields
   const errors: FieldErrors = {};
   errors.firstName = await validateField('firstName', rawData.firstName);
   errors.lastName = await validateField('lastName', rawData.lastName);
@@ -69,6 +74,7 @@ export const myProfileAction = async ({ request }: { request: Request }) => {
     birthDate: rawData.birthDate,
   };
 
+  // If user wants to change password, validate and include it
   const isPasswordChanged = rawData.password.trim() !== '';
 
   if (isPasswordChanged) {
@@ -77,10 +83,12 @@ export const myProfileAction = async ({ request }: { request: Request }) => {
     payload.newPassword = rawData.password;
   }
 
+  // Remove empty errors
   Object.keys(errors).forEach((key) => {
     if (!errors[key as keyof FieldErrors]) delete errors[key as keyof FieldErrors];
   });
 
+  // If there are validation errors, return them to the component
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
@@ -109,6 +117,7 @@ const MyProfile: React.FC = () => {
   const userData = useLoaderData() as User;
   const actionData = useActionData() as { errors?: FieldErrors; success?: boolean; logout?: boolean } | undefined;
 
+  // Component state
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -118,11 +127,13 @@ const MyProfile: React.FC = () => {
     birthDate: '',
   });
 
+  // Form state: errors, modal, spinner, etc.
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [showModal, setShowModal] = useState<ShowModalState>({ isVisible: false, message: '' });
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Initialize form values from loader
   useEffect(() => {
     if (userData) {
       setFormData({
@@ -136,6 +147,7 @@ const MyProfile: React.FC = () => {
     }
   }, [userData]);
 
+  // React to action result (update, logout, or errors)
   useEffect(() => {
     if (actionData?.success && !formData.password.trim()) {
       alert('Profile updated successfully!');
@@ -164,6 +176,7 @@ const MyProfile: React.FC = () => {
     }
   }, [actionData]);
 
+  // Validate individual field with optional email check
   const validateFieldLocal = async (name: keyof FormData, value: string) => {
     let error = '';
 
@@ -199,17 +212,20 @@ const MyProfile: React.FC = () => {
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // Handlers for field blur and change
   const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     await validateFieldLocal(name as keyof FormData, value);
   };
 
+  // Handle form input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
+  // Validate the form before allowing update
   const isFormValid = () => {
     const hasErrors = Object.values(fieldErrors).some((error) => error);
     const isPasswordChanged = formData.password.trim() !== '' || formData.confirmPassword.trim() !== '';
@@ -221,6 +237,7 @@ const MyProfile: React.FC = () => {
     return !hasErrors && hasChanges && passwordFieldsValid && !isCheckingEmail;
   };
 
+  // Handle user deletion
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
@@ -233,6 +250,7 @@ const MyProfile: React.FC = () => {
     }
   };
 
+  // Cancel deletion modal and reset target state
   const handleCancelDelete = () => {
     setShowModal({ isVisible: false, message: '' });
   };
@@ -241,6 +259,7 @@ const MyProfile: React.FC = () => {
     <div className={styles.profile}>
       <h2 className={styles.profileTitle}>My Profile</h2>
 
+      {/* Display current profile info */}
       <div className={styles.profileDetails}>
         <h3>User Details</h3>
         <p>
@@ -260,6 +279,7 @@ const MyProfile: React.FC = () => {
         </p>
       </div>
 
+      {/* Profile update form */}
       <h3 className={styles.formTitle}>Update Profile</h3>
       <Form method="post" className={styles.form}>
         <div className={styles.formGroup}>
@@ -311,15 +331,18 @@ const MyProfile: React.FC = () => {
           {fieldErrors.confirmPassword && <p className={styles.error}>{fieldErrors.confirmPassword}</p>}
         </div>
 
+        {/* Update button */}
         <button type="submit" className={styles.updateButton} disabled={!isFormValid()}>
           Update
         </button>
       </Form>
 
+      {/* Delete Account button */}
       <button className={styles.deleteButton} onClick={() => setShowModal({ isVisible: true, message: 'Are you sure you want to delete your account?' })}>
         Delete Account
       </button>
 
+      {/* Modal Confirmation */}
       {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteAccount} onNo={handleCancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
     </div>
   );

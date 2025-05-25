@@ -8,18 +8,22 @@ import Modal from '../../../Shared/Modal/Modal';
 import type User from '../../../../types/User';
 import styles from './../../../User/MyProfile/MyProfile.module.css';
 
+// Form data type used for editing a user, including password and confirmPassword
 export type FormData = Omit<User, 'id' | 'createdAt' | 'isAdmin' | 'role'> & {
   password: string;
   confirmPassword: string;
 };
 
+// Validation error type per field or general error
 type FieldErrors = Partial<Record<keyof FormData | 'general', string>>;
 
+// Modal state type
 type ShowModalState = {
   isVisible: boolean;
   message: string;
 };
 
+// Loader to fetch user data by ID (admin-only)
 export const editUserLoader = async ({ params }: LoaderFunctionArgs) => {
   const token = Cookies.get('token');
   if (!token) return redirect('/login');
@@ -37,11 +41,13 @@ export const editUserLoader = async ({ params }: LoaderFunctionArgs) => {
   }
 };
 
+// Action to handle form submission for user update
 export const editUserAction = async ({ request, params }: ActionFunctionArgs) => {
   const token = Cookies.get('token');
   if (!token) return redirect('/login');
 
   const formData = await request.formData();
+
   const rawData = {
     firstName: formData.get('firstName') as string,
     lastName: formData.get('lastName') as string,
@@ -52,11 +58,14 @@ export const editUserAction = async ({ request, params }: ActionFunctionArgs) =>
   };
 
   const errors: FieldErrors = {};
+
+  // Validate each field
   errors.firstName = await validateField('firstName', rawData.firstName);
   errors.lastName = await validateField('lastName', rawData.lastName);
   errors.email = await validateField('email', rawData.email, { checkEmail: true });
   errors.birthDate = await validateField('birthDate', rawData.birthDate);
 
+  // Prepare payload for update
   const payload: Record<string, string> = {
     firstName: rawData.firstName,
     lastName: rawData.lastName,
@@ -66,16 +75,19 @@ export const editUserAction = async ({ request, params }: ActionFunctionArgs) =>
 
   const isPasswordChanged = rawData.password.trim() !== '';
 
+  // If password is changed, validate and include in payload
   if (isPasswordChanged) {
     errors.password = await validateField('password', rawData.password);
     errors.confirmPassword = await validateField('confirmPassword', rawData.confirmPassword, { password: rawData.password });
     payload.newPassword = rawData.password;
   }
 
+  // Remove empty error fields
   Object.keys(errors).forEach((key) => {
     if (!errors[key as keyof FieldErrors]) delete errors[key as keyof FieldErrors];
   });
 
+  // If there are validation errors, return them to the component
   if (Object.keys(errors).length > 0) return { errors };
 
   try {
@@ -97,6 +109,7 @@ const EditUser: React.FC = () => {
   const actionData = useActionData() as { errors?: FieldErrors; success?: boolean } | undefined;
   const navigate = useNavigate();
 
+  // Form state
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -106,11 +119,13 @@ const EditUser: React.FC = () => {
     confirmPassword: '',
   });
 
+  // Form state: field validation errors, email availability check, delete modal visibility, and delete operation status
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [showModal, setShowModal] = useState<ShowModalState>({ isVisible: false, message: '' });
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Load initial user data into form
   useEffect(() => {
     if (userData) {
       setFormData({
@@ -124,6 +139,7 @@ const EditUser: React.FC = () => {
     }
   }, [userData]);
 
+  // Handle response from form action
   useEffect(() => {
     if (actionData?.success) {
       alert('User updated successfully!');
@@ -134,6 +150,7 @@ const EditUser: React.FC = () => {
     }
   }, [actionData]);
 
+  // Validate individual field
   const validateFieldLocal = async (name: keyof FormData, value: string) => {
     let error = '';
 
@@ -168,29 +185,33 @@ const EditUser: React.FC = () => {
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // On field blur: validate input
   const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     await validateFieldLocal(name as keyof FormData, value);
   };
 
+  // Handle form input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
+  // Determine if form is valid and ready to submit
   const isFormValid = () => {
     const hasErrors = Object.values(fieldErrors).some((error) => error);
     const isPasswordChanged = formData.password.trim() !== '' || formData.confirmPassword.trim() !== '';
 
     const hasChanges = formData.firstName !== userData.firstName || formData.lastName !== userData.lastName || formData.email !== userData.email || formData.birthDate !== (userData.birthDate?.split('T')[0] || '') || isPasswordChanged;
 
-    // 👇 asigură-te că ambele câmpuri sunt completate dacă modifici parola
+    // Ensure both password fields are filled in if password is being changed
     const passwordFieldsValid = !isPasswordChanged || (formData.password.trim() !== '' && formData.confirmPassword.trim() !== '');
 
     return !hasErrors && hasChanges && passwordFieldsValid && !isCheckingEmail;
   };
 
+  // Handle user deletion
   const handleDeleteUser = async () => {
     setIsDeleting(true);
     try {
@@ -204,6 +225,7 @@ const EditUser: React.FC = () => {
     }
   };
 
+  // Cancel deletion modal and reset target state
   const handleCancelDelete = () => {
     setShowModal({ isVisible: false, message: '' });
   };
@@ -212,6 +234,7 @@ const EditUser: React.FC = () => {
     <div className={styles.profile}>
       <h2 className={styles.profileTitle}>Edit User</h2>
 
+      {/* Static display of user info */}
       <div className={styles.profileDetails}>
         <h3>User Details</h3>
         <p>
@@ -281,19 +304,23 @@ const EditUser: React.FC = () => {
           {fieldErrors.confirmPassword && <p className={styles.error}>{fieldErrors.confirmPassword}</p>}
         </div>
 
+        {/* Submit button */}
         <button type="submit" className={styles.updateButton} disabled={!isFormValid()}>
           Update
         </button>
       </Form>
 
+      {/* Delete button */}
       <button className={styles.deleteButton} onClick={() => setShowModal({ isVisible: true, message: 'Are you sure you want to delete this user?' })}>
         Delete User
       </button>
 
+      {/* Back button */}
       <button className={styles.backButton} onClick={() => navigate('/admin/all-users')}>
         Back to All Users
       </button>
 
+      {/* Modal Confirmation */}
       {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={handleCancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
     </div>
   );

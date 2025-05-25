@@ -7,6 +7,7 @@ import Modal from '../../../Shared/Modal/Modal';
 import styles from './AllUsers.module.css';
 import { useAuth } from '../../../../context/AuthContext';
 
+// Extended user type with extra fields used in UI
 interface AugmentedUser {
   id: string;
   firstName: string;
@@ -22,6 +23,7 @@ interface LoaderData {
   users: AugmentedUser[];
 }
 
+// Loader function to fetch all users
 export const allUsersLoader = async () => {
   const token = Cookies.get('token');
   if (!token) return redirect('/login');
@@ -43,6 +45,7 @@ const AllUsers: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser, setUser } = useAuth();
 
+  // State for user list, filters, sort options, modal, and actions
   const [users, setUsers] = useState<AugmentedUser[]>(initialUsers);
   const [filters, setFilters] = useState({
     userType: '',
@@ -58,15 +61,19 @@ const AllUsers: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
+  // Fetch filtered and sorted users
   const fetchUsers = async (appliedFilters = filters, sort = sortOption) => {
     const token = Cookies.get('token');
     const params: Record<string, string> = {};
 
+    // Apply role filter
     if (appliedFilters.userType === 'admin') params.role = 'admin';
     else if (appliedFilters.userType === 'regular') params.role = 'user';
 
+    // Apply age and flats count range filters
     if (appliedFilters.minAge || appliedFilters.maxAge) params.age = `${appliedFilters.minAge || 0}-${appliedFilters.maxAge || 120}`;
     if (appliedFilters.minFlats || appliedFilters.maxFlats) params.flatsCount = `${appliedFilters.minFlats || 0}-${appliedFilters.maxFlats || 1000}`;
+
     if (sort) params.sort = sort;
 
     try {
@@ -80,23 +87,28 @@ const AllUsers: React.FC = () => {
     }
   };
 
+  // Refetch users when filters or sort change
   useEffect(() => {
     fetchUsers(filters, sortOption);
   }, [filters, sortOption]);
 
+  // Update pending filter values
   const handleFilterChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setPendingFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Update sort value
   const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSortOption(e.target.value);
   };
 
+  // Apply filters from pending state
   const applyFilters = () => {
     setFilters(pendingFilters);
   };
 
+  // Reset filters and sorting
   const resetFilters = () => {
     const empty = { userType: '', minAge: '', maxAge: '', minFlats: '', maxFlats: '' };
     setPendingFilters(empty);
@@ -104,6 +116,7 @@ const AllUsers: React.FC = () => {
     setSortOption('');
   };
 
+  // Toggle admin role for a specific user
   const handleAdminToggle = async (userId: string, isAdmin: boolean) => {
     setUpdatingUserId(userId);
     try {
@@ -118,10 +131,8 @@ const AllUsers: React.FC = () => {
         }
       );
 
-      // Dacă userId e al userului logat, actualizează contextul și redirecționează
+      // If current user removed their own admin role, update context and redirect
       if (currentUser?.id === userId && newRole === 'user') {
-        console.log('👤 You removed your own admin role. Redirecting to home...');
-        console.log('🔄 Updating user context:', { ...currentUser, role: 'user' });
         setUser({ ...currentUser, role: 'user' });
         navigate('/');
       } else {
@@ -134,11 +145,13 @@ const AllUsers: React.FC = () => {
     }
   };
 
+  // Show confirmation modal for user deletion
   const confirmDeleteUser = (userId: string) => {
     setDeleteTargetId(userId);
     setShowModal({ isVisible: true, message: 'Are you sure you want to delete this user?' });
   };
 
+  // Execute user deletion
   const handleDeleteUser = async () => {
     if (!deleteTargetId) return;
     setIsDeleting(true);
@@ -155,6 +168,7 @@ const AllUsers: React.FC = () => {
     }
   };
 
+  // Cancel delete modal
   const cancelDelete = () => {
     setShowModal({ isVisible: false, message: '' });
     setDeleteTargetId(null);
@@ -164,6 +178,7 @@ const AllUsers: React.FC = () => {
     <div className={styles.allUsers}>
       <h2>All Registered Users</h2>
 
+      {/* Filter Section */}
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
           <label>User Type:</label>
@@ -191,6 +206,7 @@ const AllUsers: React.FC = () => {
         </button>
       </div>
 
+      {/* Sort Section */}
       <div className={styles.sort}>
         <div className={styles.sortContainer}>
           <label>Sort By:</label>
@@ -206,6 +222,7 @@ const AllUsers: React.FC = () => {
         </div>
       </div>
 
+      {/* Users Table */}
       <table className={styles.userTable}>
         <thead>
           <tr>
@@ -235,19 +252,20 @@ const AllUsers: React.FC = () => {
                 <td>{user.publishedFlatsCount}</td>
                 <td>{user.role === 'admin' ? 'Yes' : 'No'}</td>
                 <td>
+                  {/* Edit button redirects to self or admin edit page */}
                   <button
                     onClick={() => {
-                      console.log('User row ID:', user.id);
-                      console.log('Current user ID:', currentUser?.id);
                       if (currentUser?.id === user.id) navigate('/profile');
                       else navigate(`/admin/edit-user/${user.id}`);
                     }}
                   >
                     Edit
                   </button>
+                  {/* Toggle admin status */}
                   <button onClick={() => handleAdminToggle(user.id, user.role === 'admin')} disabled={updatingUserId === user.id}>
                     {updatingUserId === user.id ? 'Updating...' : user.role === 'admin' ? 'Remove Admin' : 'Grant Admin'}
                   </button>
+                  {/* Trigger delete confirmation */}
                   <button onClick={() => confirmDeleteUser(user.id)}>Delete</button>
                 </td>
               </tr>
@@ -256,6 +274,7 @@ const AllUsers: React.FC = () => {
         </tbody>
       </table>
 
+      {/* Modal for confirming user deletion */}
       {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={cancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
     </div>
   );

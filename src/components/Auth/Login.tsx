@@ -11,32 +11,40 @@ type LoginFormData = {
   password: string;
 };
 
-// Define the structure for field errors
+// Define the structure for field-level and general errors
 type LoginFieldErrors = Partial<Record<keyof LoginFormData | 'general', string>>;
 
+// Action handler for the login form
 export const loginAction = async ({ request }: { request: Request }) => {
   const formData = await request.formData();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
   const errors: LoginFieldErrors = {};
+
+  // Validate both fields before sending the request
   errors.email = await validateField('email', email);
   errors.password = await validateField('password', password);
 
+  // Remove fields with no errors
   Object.keys(errors).forEach((key) => {
     if (!errors[key as keyof LoginFormData]) delete errors[key as keyof LoginFormData];
   });
 
+  // If any validation errors exist, return them immediately
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
 
   try {
+    // Send login request to backend
     const res = await axios.post('/users/login', { email, password });
     const { userDB: user, token } = res.data;
 
+    // Return user and token on successful login
     return { success: true, user, token };
   } catch (err: any) {
+    // Capture and return error message from backend
     const message = err?.response?.data?.message || 'Login failed. Please try again.';
     return { errors: { general: message } };
   }
@@ -44,14 +52,19 @@ export const loginAction = async ({ request }: { request: Request }) => {
 
 const Login: React.FC = () => {
   const actionData = useActionData<{ success?: boolean; errors?: LoginFieldErrors; user?: any; token?: string }>();
+
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // Local state for form data, errors and general error message
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
   const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' });
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  // Handle login result from action
   useEffect(() => {
     if (actionData?.success && actionData.user && actionData.token) {
+      // Successful login
       setGeneralError(null);
       login(actionData.user, actionData.token);
       alert('Login successful! Redirecting to home page.');
@@ -59,21 +72,23 @@ const Login: React.FC = () => {
     }
 
     if (actionData?.errors?.general) {
+      // Show general error and reset form if credentials were wrong
       setGeneralError(actionData.errors.general);
 
-      // Resetează câmpurile doar dacă eroarea este legată de credentiale greșite
       if (actionData.errors.general.toLowerCase().includes('invalid')) {
         setFormData({ email: '', password: '' });
       }
     }
   }, [actionData, navigate, login]);
 
+  // Validate field on blur
   const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const error = await validateField(name, value);
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // Handle input changes and reset errors
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -81,6 +96,7 @@ const Login: React.FC = () => {
     setGeneralError(null);
   };
 
+  // Determine if form is valid and ready to submit
   const isFormValid = () => {
     return formData.email.trim() !== '' && formData.password.trim() !== '' && Object.values(fieldErrors).every((error) => !error);
   };
@@ -107,8 +123,10 @@ const Login: React.FC = () => {
           {actionData?.errors?.password && <p className={styles.error}>{actionData.errors.password}</p>}
         </div>
 
+        {/* General error */}
         {generalError && <p className={styles.error}>{generalError}</p>}
 
+        {/* Submit button */}
         <button type="submit" disabled={!isFormValid()}>
           Login
         </button>

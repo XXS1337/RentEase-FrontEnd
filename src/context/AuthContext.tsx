@@ -70,7 +70,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
 
           if (prevUser && (prevUser.role !== data.currentUser.role || prevUser.email !== data.currentUser.email || prevUser.firstName !== data.currentUser.firstName || prevUser.lastName !== data.currentUser.lastName)) {
-            console.log('🔄 User context auto-updated from /users/me');
             return { ...data.currentUser, id: data.currentUser._id };
           }
 
@@ -78,7 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } catch (err: any) {
         if (err?.response?.status === 401 || err?.response?.status === 404) {
-          console.log('🚨 User invalid or deleted. Logging out...');
           Cookies.remove('token');
           setUser(null);
         }

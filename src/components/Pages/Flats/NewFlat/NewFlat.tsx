@@ -7,12 +7,14 @@ import styles from './NewFlat.module.css';
 import axios from '../../../../api/axiosConfig';
 import Cookies from 'js-cookie';
 
+// Action to validate and submit the new flat form
 export const newFlatAction = async ({ request }: { request: Request }) => {
   const token = Cookies.get('token');
   if (!token) return { errors: { general: 'Not authenticated' } };
 
   const formData = await request.formData();
 
+  // Extract form values
   const adTitle = formData.get('adTitle') as string;
   const city = formData.get('city') as string;
   const streetName = formData.get('streetName') as string;
@@ -27,6 +29,7 @@ export const newFlatAction = async ({ request }: { request: Request }) => {
   const [y, m, d] = dateAvailableRaw.split('-').map(Number);
   const dateAvailable = Date.UTC(y, m - 1, d);
 
+  // Validate fields
   const errors: FieldErrors = {};
   errors.adTitle = await validateField('adTitle', adTitle);
   errors.city = await validateField('city', city);
@@ -38,15 +41,18 @@ export const newFlatAction = async ({ request }: { request: Request }) => {
   errors.dateAvailable = await validateField('dateAvailable', dateAvailable);
   errors.image = imageFile?.name ? await validateField('image', imageFile.name) : 'Image is required';
 
+  // Remove fields with no errors
   Object.keys(errors).forEach((key) => {
     if (!errors[key as keyof FieldErrors]) delete errors[key as keyof FieldErrors];
   });
 
+  // If there are validation errors, return them to the component
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
 
   try {
+    // Prepare form data for multipart submission
     const uploadData = new FormData();
     uploadData.append('adTitle', adTitle);
     uploadData.append('city', city);
@@ -59,6 +65,7 @@ export const newFlatAction = async ({ request }: { request: Request }) => {
     uploadData.append('dateAvailable', dateAvailable.toString());
     uploadData.append('image', imageFile);
 
+    // Send POST request
     await axios.post('/flats', uploadData, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -76,6 +83,8 @@ export const newFlatAction = async ({ request }: { request: Request }) => {
 const NewFlat: React.FC = () => {
   const actionData = useActionData<{ success?: boolean; errors?: FieldErrors }>();
   const navigate = useNavigate();
+
+  // Form state: track all fields, errors, and loading
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -93,6 +102,7 @@ const NewFlat: React.FC = () => {
   });
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  // Handle action response after submit
   useEffect(() => {
     if (actionData?.success && !formSubmitted) {
       alert('Flat added successfully!');
@@ -106,6 +116,7 @@ const NewFlat: React.FC = () => {
     }
   }, [actionData, formSubmitted, navigate]);
 
+  // Validate individual field on blur
   const handleBlur = async (e: FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
     const { name, value, files } = target;
@@ -114,6 +125,7 @@ const NewFlat: React.FC = () => {
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // Handle form field changes
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked, files } = e.target;
     setFormData((prev) => ({
@@ -124,6 +136,7 @@ const NewFlat: React.FC = () => {
     setGeneralError(null);
   };
 
+  // Check if all fields are valid before submitting
   const isFormValid = () => {
     const isValid = Object.values(fieldErrors).every((error) => !error) && Object.values(formData).every((value) => value !== '' && value !== null);
     return isValid;
@@ -134,6 +147,7 @@ const NewFlat: React.FC = () => {
       <h2>Add New Flat</h2>
 
       <Form method="post" encType="multipart/form-data" className={styles.form} onSubmit={() => setIsSubmitting(true)}>
+        {/* Input fields for each flat */}
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
             <label htmlFor="adTitle">Ad Title:</label>
@@ -219,8 +233,10 @@ const NewFlat: React.FC = () => {
           {fieldErrors.image && <p className={styles.error}>{fieldErrors.image}</p>}
         </div>
 
+        {/* Global error message */}
         {generalError && <p className={styles.error}>{generalError}</p>}
 
+        {/* Submit button */}
         <button type="submit" className={styles.saveButton} disabled={isSubmitting || !isFormValid()}>
           {isSubmitting ? 'Saving...' : 'Save'}
         </button>

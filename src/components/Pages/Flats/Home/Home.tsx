@@ -6,12 +6,15 @@ import axios from './../../../../api/axiosConfig';
 import Spinner from '../../../Shared/Spinner/Spinner';
 import styles from './Home.module.css';
 
+// Loader function to fetch flats and user's favorites (if logged in)
 export const homeLoader = async () => {
   const token = Cookies.get('token');
   if (!token) return { flats: [], userId: null };
 
   let userData;
+
   try {
+    // Fetch logged-in user
     const res = await axios.get('/users/me', {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -21,10 +24,13 @@ export const homeLoader = async () => {
     return { flats: [], userId: null };
   }
 
+  // Fetch all flats
   const { data: flatsData } = await axios.get('/flats');
 
+  // Extract user's favorite flat IDs
   const favoriteFlatIds = userData?.currentUser?.favoriteFlats || [];
 
+  // Map and enrich each flat with id, image, and favorite flag
   const flats = flatsData.data.map((flat: any) => ({
     ...flat,
     id: flat._id,
@@ -37,6 +43,9 @@ export const homeLoader = async () => {
 
 const Home: React.FC = () => {
   const { flats: initialFlats, userId } = useLoaderData() as { flats: any[]; userId: string };
+  const navigate = useNavigate();
+
+  // State: all flats, filters, sorting, validation and loading
   const [flats, setFlats] = useState<any[]>(initialFlats);
   const [filters, setFilters] = useState({
     city: '',
@@ -55,8 +64,8 @@ const Home: React.FC = () => {
   const [sortOption, setSortOption] = useState('');
   const [validationErrors, setValidationErrors] = useState<{ price?: string; area?: string }>({});
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
+  // Helper to map sort option to query format
   const mapSortToQuery = (option: string) => {
     switch (option) {
       case 'cityAsc':
@@ -76,16 +85,21 @@ const Home: React.FC = () => {
     }
   };
 
+  // Fetch flats from backend using filters and sort, and enrich with favorites
   const fetchFlatsFromServer = useCallback(async () => {
     try {
       setLoading(true);
+
+      // Build query parameters
       const params: any = {};
       if (filters.city) params.city = filters.city;
-      if (filters.minPrice || filters.maxPrice) params.rentPrice = `${filters.minPrice || 0}-${filters.maxPrice || 10000}`;
-      if (filters.minArea || filters.maxArea) params.areaSize = `${filters.minArea || 0}-${filters.maxArea || 1000}`;
+      if (filters.minPrice || filters.maxPrice) params.rentPrice = `${filters.minPrice || 0}-${filters.maxPrice || 1000000}`;
+      if (filters.minArea || filters.maxArea) params.areaSize = `${filters.minArea || 0}-${filters.maxArea || 100000}`;
       if (sortOption) params.sort = mapSortToQuery(sortOption);
 
       const { data } = await axios.get('/flats', { params });
+
+      // Get favorites again if token is valid
       const token = Cookies.get('token');
       let favoriteFlatIds: string[] = [];
       if (token) {
@@ -99,12 +113,14 @@ const Home: React.FC = () => {
         }
       }
 
+      // Enrich flats with favorite info
       const enriched = data.data.map((flat: any) => ({
         ...flat,
         id: flat._id,
         favorite: favoriteFlatIds.includes(flat._id),
         image: flat.image?.url,
       }));
+
       setFlats(enriched);
     } catch (err) {
       console.error('Failed to fetch flats:', err);
@@ -113,6 +129,7 @@ const Home: React.FC = () => {
     }
   }, [filters, sortOption, userId]);
 
+  // Validate filters (price and area range logic)
   useEffect(() => {
     const errors: typeof validationErrors = {};
     const minPrice = parseFloat(pendingFilters.minPrice);
@@ -128,12 +145,13 @@ const Home: React.FC = () => {
     setValidationErrors(errors);
   }, [pendingFilters]);
 
+  // Re-fetch flats on sort option change
   useEffect(() => {
     fetchFlatsFromServer();
   }, [sortOption, fetchFlatsFromServer]);
 
+  // Handle favorite/unfavorite click
   const handleFavorite = async (flat: any) => {
-    console.log('handleFavorite called for flat:', flat.id);
     if (!userId) {
       navigate('/login');
       return;
@@ -152,25 +170,30 @@ const Home: React.FC = () => {
           }
         );
       }
+      // Update favorite state locally
       setFlats((prev) => prev.map((f) => (f.id === flat.id ? { ...f, favorite: !flat.favorite } : f)));
     } catch (err) {
       console.error('Favorite update failed', err);
     }
   };
 
+  // Handle filter input change
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPendingFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle sort selection
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOption(e.target.value);
   };
 
+  // Apply pending filters
   const applyFilters = () => {
     setFilters(pendingFilters);
   };
 
+  // Reset all filters and sorting
   const resetFilters = () => {
     const reset = { city: '', minPrice: '', maxPrice: '', minArea: '', maxArea: '' };
     setPendingFilters(reset);
@@ -178,17 +201,7 @@ const Home: React.FC = () => {
     setSortOption('');
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        applyFilters();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [applyFilters]);
-
+  // Apply or reset filters with Enter or Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
@@ -197,7 +210,6 @@ const Home: React.FC = () => {
         resetFilters();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [applyFilters, resetFilters]);
@@ -206,6 +218,7 @@ const Home: React.FC = () => {
     <div className={styles.home}>
       <h2>Available Flats</h2>
 
+      {/* Filters Section */}
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
           <label htmlFor="city">City:</label>
@@ -228,11 +241,14 @@ const Home: React.FC = () => {
           Reset Filters
         </button>
       </div>
+
+      {/* Display filter errors if any */}
       <div className={styles.filterErrors}>
         {validationErrors.price && <p className={styles.error}>{validationErrors.price}</p>}
         {validationErrors.area && <p className={styles.error}>{validationErrors.area}</p>}
       </div>
 
+      {/* Sorting Section */}
       <div className={styles.sort}>
         <div className={styles.sortContainer}>
           <label htmlFor="sortOptions">Sort By:</label>
@@ -248,6 +264,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
+      {/* Flat Listing or Spinner */}
       {loading ? (
         <Spinner />
       ) : (

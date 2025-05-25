@@ -4,10 +4,10 @@ import axios from '../../api/axiosConfig';
 import { validateField } from '../../utils/validateField';
 import styles from './Auth.module.css';
 
-// Tipuri pentru erori
+// Define possible error types for the reset password form
 type ResetPasswordErrors = Partial<Record<'password' | 'confirmPassword' | 'general', string>>;
 
-// Acțiune de resetare
+// Action function for handling password reset form submission
 export const resetPasswordAction = async ({ request, params }: { request: Request; params: any }) => {
   const formData = await request.formData();
   const password = formData.get('password') as string;
@@ -16,17 +16,23 @@ export const resetPasswordAction = async ({ request, params }: { request: Reques
 
   const errors: ResetPasswordErrors = {};
 
+  // Validate both fields
   errors.password = await validateField('password', password);
   errors.confirmPassword = await validateField('confirmPassword', confirmPassword, { password });
+
+  // Ensure the token exists
   if (!token) errors.general = 'Invalid or missing token.';
 
+  // Remove empty error fields
   Object.keys(errors).forEach((key) => {
     if (!errors[key as keyof ResetPasswordErrors]) delete errors[key as keyof ResetPasswordErrors];
   });
 
+  // If any errors, return early
   if (Object.keys(errors).length > 0) return { errors };
 
   try {
+    // Send password reset request to the server
     await axios.patch(`/users/resetPassword/${token}`, { password });
     return { success: true };
   } catch (err: any) {
@@ -40,10 +46,14 @@ export const resetPasswordAction = async ({ request, params }: { request: Reques
 
 const ResetPassword: React.FC = () => {
   const actionData = useActionData() as { success?: boolean; errors?: ResetPasswordErrors };
+
+  // Local form state
   const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
   const [fieldErrors, setFieldErrors] = useState<ResetPasswordErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
+
+  // Redirect countdown logic if token is invalid/expired
   const [showRedirectNotice, setShowRedirectNotice] = useState(false);
   const [countdown, setCountdown] = useState(3);
 
@@ -55,6 +65,7 @@ const ResetPassword: React.FC = () => {
         window.location.href = '/login';
       } else if (actionData.errors) {
         setFieldErrors(actionData.errors);
+        // Auto-redirect if token is invalid/expired
         if (actionData.errors.general?.toLowerCase().includes('token')) {
           setShowRedirectNotice(true);
           const interval = setInterval(() => {
@@ -71,6 +82,7 @@ const ResetPassword: React.FC = () => {
     }
   }, [actionData]);
 
+  // Handle input change and reset field errors
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -78,12 +90,14 @@ const ResetPassword: React.FC = () => {
     setTouched(true);
   };
 
+  // Validate field on blur
   const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const error = await validateField(name, value, { password: formData.password });
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // Enable submit only if touched, fields filled, and no errors
   const isFormValid = touched && formData.password.trim() !== '' && formData.confirmPassword.trim() !== '' && Object.values(fieldErrors).every((err) => !err);
 
   return (
@@ -106,6 +120,7 @@ const ResetPassword: React.FC = () => {
           {fieldErrors.confirmPassword && <p className={styles.error}>{fieldErrors.confirmPassword}</p>}
         </div>
 
+        {/* General error or redirect countdown message */}
         {fieldErrors.general && <p className={styles.error}>{fieldErrors.general}</p>}
         {showRedirectNotice && <p className={styles.error}>Redirecting to Forgot Password in {countdown}...</p>}
 

@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import styles from './Modal.module.css';
 
+// Props for the Modal component
 type ModalProps = {
-  message: string;
-  onYes: () => void;
-  onNo: () => void;
-  yesText?: string;
-  yesDisabled?: boolean;
+  message: string; // Message to display inside the modal
+  onYes: () => void; // Handler for "Yes" button click
+  onNo: () => void; // Handler for "No" button click or Escape key
+  yesText?: string; // Optional custom text for the "Yes" button
+  yesDisabled?: boolean; // Optional flag to disable the "Yes" button
 };
 
 // Modal component for confirmation dialogs

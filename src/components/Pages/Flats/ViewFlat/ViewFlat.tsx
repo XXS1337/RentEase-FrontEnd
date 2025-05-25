@@ -45,11 +45,14 @@ const ViewFlat: React.FC = () => {
   const flatData = useLoaderData() as any;
   const navigate = useNavigate();
   const location = useLocation();
-  const [showMessages, setShowMessages] = useState(location.pathname.endsWith('/messages'));
 
-  const token = Cookies.get('token');
+  // State to show/hide messages and track logged-in user ID
+  const [showMessages, setShowMessages] = useState(location.pathname.endsWith('/messages'));
   const [userId, setUserId] = useState<string | null>(null);
 
+  const token = Cookies.get('token');
+
+  // Fetch current user info on mount
   React.useEffect(() => {
     const fetchUser = async () => {
       if (!token) return;
@@ -65,10 +68,13 @@ const ViewFlat: React.FC = () => {
     fetchUser();
   }, [token]);
 
+  // Show spinner if flat data is not loaded
   if (!flatData) return <Spinner />;
 
+  // Destructure flat fields
   const { id, adTitle, city, streetName, streetNumber, areaSize, hasAC, yearBuilt, rentPrice, dateAvailable, image, ownerID } = flatData;
 
+  // Toggle message section
   const handleToggleMessages = () => {
     if (showMessages) {
       navigate(`/flats/view/${id}`);
@@ -82,9 +88,12 @@ const ViewFlat: React.FC = () => {
   return (
     <>
       <div className={styles.viewFlat}>
+        {/* Header section */}
         <div className={styles.header}>
           <h2>{adTitle}</h2>
         </div>
+
+        {/* Flat details and actions */}
         <div className={styles.flatDetails}>
           <div className={styles.imageContainer}>
             <img src={image} alt={adTitle} className={styles.flatImage} />
@@ -115,18 +124,24 @@ const ViewFlat: React.FC = () => {
               <strong>Date Available:</strong> {new Date(dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
             </p>
 
+            {/* Action icons */}
             <div className={styles.icons}>
+              {/* Navigate to homepage */}
               <FaHome className={styles.backToHomepage} title="Back to Homepage" onClick={() => navigate('/')} />
+
+              {/* Toggle messages */}
               {showMessages ? (
                 <BsFillEnvelopeSlashFill className={`${styles.envelopeIcon} ${styles.active}`} title="Hide Messages" onClick={handleToggleMessages} />
               ) : (
                 <BsFillEnvelopeFill className={styles.envelopeIcon} title="Show Messages" onClick={handleToggleMessages} />
               )}
+              {/* Show edit button only if current user is flat owner */}
               {userId === ownerID && <FaEdit className={styles.editFlat} title="Edit Flat" onClick={() => navigate(`/flats/edit/${id}`)} />}
             </div>
           </div>
         </div>
       </div>
+      {/* Message section (loaded via outlet) */}
       <div className={showMessages ? styles.visible : styles.hidden}>
         <Outlet context={{ flatID: id, ownerID }} />
       </div>

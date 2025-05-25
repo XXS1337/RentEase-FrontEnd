@@ -11,13 +11,16 @@ export const favoritesLoader = async () => {
   if (!token) return redirect('/login');
 
   try {
+    // Fetch current user and their list of favorite flat IDs
     const { data } = await axios.get('/users/me', {
       headers: { Authorization: `Bearer ${token}` },
     });
     const favoriteFlatIds = data.currentUser.favoriteFlats || [];
 
+    // Fetch all flats from database
     const { data: flatsData } = await axios.get('/flats');
 
+    // Filter and format only the favorite flats
     const favorites = flatsData.data
       .filter((flat: any) => favoriteFlatIds.includes(flat._id))
       .map((flat: any) => ({
@@ -38,6 +41,7 @@ const Favorites: React.FC = () => {
   const { favorites } = useLoaderData() as { favorites: any[] };
   const navigate = useNavigate();
 
+  // Handle the removal of a flat from user's favorites
   const handleRemoveFavorite = async (flatId: string) => {
     try {
       const token = Cookies.get('token');
@@ -45,6 +49,7 @@ const Favorites: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Reload to reflect updated state
       window.location.reload();
     } catch (error) {
       console.error('Error removing favorite flat:', error);
@@ -54,15 +59,20 @@ const Favorites: React.FC = () => {
   return (
     <div className={styles.favorites}>
       <h2>Your Favorite Flats</h2>
+
+      {/* If no favorites, show fallback message */}
       {favorites.length === 0 ? (
         <p className={styles.noResults}>You have no favorite flats.</p>
       ) : (
         <div className={styles.gridContainer}>
           {favorites.map((flat) => (
             <div className={styles.gridItem} key={flat.id}>
+              {/* Image section (click navigates to flat details) */}
               <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
                 <img src={flat.image} alt={flat.adTitle} />
               </div>
+
+              {/* Flat details */}
               <div className={styles.flatDetails}>
                 <h3>{flat.adTitle}</h3>
                 <p>
@@ -89,6 +99,7 @@ const Favorites: React.FC = () => {
                 <p>
                   <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
                 </p>
+                {/* Remove from favorites button */}
                 <IoMdHeart className={styles.removeFavorite} onClick={() => handleRemoveFavorite(flat.id)} title="Remove from Favorites" />
               </div>
             </div>

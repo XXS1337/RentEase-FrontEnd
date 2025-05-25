@@ -7,30 +7,34 @@ import { validateField } from '../../../../utils/validateField';
 import type Message from '../../../../types/Message';
 import styles from './Messages.module.css';
 
+// Type for the current logged-in user
 interface CurrentUser {
   firstName: string;
   lastName: string;
   email: string;
 }
 
+// Data returned from the loader
 interface LoaderData {
   messages: Message[];
   isOwner: boolean;
   userCanMessage: boolean;
 }
 
+// Data returned from the action after form submit
 interface ActionData {
   success?: boolean;
   error?: string;
   message?: Partial<Message>;
 }
 
+// Context received from the parent route
 interface ContextData {
   flatID: string;
   ownerID: string;
 }
 
-// Loader to fetch messages from backend
+// Loader function to fetch messages and user access rights
 export const messagesLoader = async ({ params }: LoaderFunctionArgs): Promise<LoaderData | Response> => {
   const token = Cookies.get('token');
   if (!token) return redirect('/login');
@@ -38,16 +42,20 @@ export const messagesLoader = async ({ params }: LoaderFunctionArgs): Promise<Lo
   if (!flatID) return redirect('/');
 
   try {
+    // Ensure user is authenticated
     await axios.get('/users/me', {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    // Fetch messages for this flat
     const { data: msgRes } = await axios.get(`/flats/${flatID}/messages`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     const isOwner = msgRes.meta?.isOwner || false;
     const userCanMessage = msgRes.meta?.userCanMessage || false;
+
+    // Map message data into consistent format
     const messages = msgRes.data
       .map((msg: any) => ({
         id: msg._id,
@@ -79,6 +87,7 @@ export const messagesLoader = async ({ params }: LoaderFunctionArgs): Promise<Lo
   }
 };
 
+// Action function to send a new message to the flat owner
 export const messagesAction = async ({ request, params }: ActionFunctionArgs): Promise<ActionData> => {
   const token = Cookies.get('token');
   if (!token) return { error: 'Not authenticated' };
@@ -118,12 +127,15 @@ const Messages: React.FC = () => {
   const { flatID } = useOutletContext<ContextData>();
   const { messages: initialMessages, isOwner, userCanMessage } = useLoaderData() as LoaderData;
   const actionData = useActionData<ActionData>();
+  const submit = useSubmit();
+
+  // State: messages list, current input, validation errors, and user info
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [newMessage, setNewMessage] = useState('');
   const [error, setError] = useState('');
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const submit = useSubmit();
 
+  // Fetch current user details for display in messages
   useEffect(() => {
     const fetchUser = async () => {
       const token = Cookies.get('token');
@@ -140,6 +152,7 @@ const Messages: React.FC = () => {
     fetchUser();
   }, []);
 
+  // Handle the result of sending a message
   useEffect(() => {
     if (actionData?.success && actionData.message) {
       const newMsg: Message = {
@@ -159,6 +172,7 @@ const Messages: React.FC = () => {
     }
   }, [actionData, currentUser, flatID]);
 
+  // Update message input and validate live
   const handleInputChange = async (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setNewMessage(value);
@@ -170,6 +184,7 @@ const Messages: React.FC = () => {
     }
   };
 
+  // Validate field on blur
   const handleBlur = async () => {
     const error = await validateField('messageContent', newMessage);
     setError(error);
@@ -178,6 +193,8 @@ const Messages: React.FC = () => {
   return (
     <div className={styles.messages}>
       <h3>Messages</h3>
+
+      {/* Display message list */}
       <div className={styles.messageList}>
         {messages.length > 0 ? (
           messages.map((msg) => (
@@ -198,6 +215,7 @@ const Messages: React.FC = () => {
         )}
       </div>
 
+      {/* If user is not the flat owner and is allowed to message */}
       {!isOwner && userCanMessage && (
         <Form
           method="post"
