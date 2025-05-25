@@ -116,6 +116,16 @@ const AllUsers: React.FC = () => {
     setSortOption('');
   };
 
+  // Keyboard shortcut: Enter to apply, Escape to reset
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') applyFilters();
+      else if (e.key === 'Escape') resetFilters();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [pendingFilters]);
+
   // Toggle admin role for a specific user
   const handleAdminToggle = async (userId: string, isAdmin: boolean) => {
     setUpdatingUserId(userId);
