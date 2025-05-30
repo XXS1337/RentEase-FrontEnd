@@ -1,8 +1,8 @@
 /* Footer Container */
 .footer {
     width: 100%;
-    background-color: #4a90e2;
-    color: #ffffff;
+    background-color: var(--navbar-bg);
+    color: var(--navbar-text);
     padding: 1rem;
     display: flex;
     flex-direction: column;
@@ -18,13 +18,13 @@
 }
 
 .socialMedia a {
-    color: #ffffff;
+    color: var(--navbar-text);
     font-size: 1.5rem;
     transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .socialMedia a:hover {
-    color: #ff6f61;
+    color: var(--navbar-active);
     transform: scale(1.2);
 }
 
@@ -41,18 +41,18 @@
 }
 
 .footerInfo a {
-    color: #ffffff;
+    color: var(--navbar-text);
     text-decoration: none;
     transition: color 0.3s ease, transform 0.3s ease;
 }
 
 .footerInfo a:hover {
-    color: #ff6f61;
+    color: var(--navbar-active);
     transform: scale(1.1);
 }
 
 .footerInfo a:visited {
-    color: #ffffff;
+    color: var(--navbar-text);
 }
 
 /* Responsive Design */

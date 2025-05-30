@@ -3,8 +3,8 @@
     width: 100%;
     margin: 1rem auto;
     padding: 1.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: var(--page-bg);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -17,15 +17,15 @@
 }
 
 .header h2 {
-    color: #4a90e2;
+    color: var(--text-primary);
     font-size: 1.5rem;
     margin-bottom: 0;
 }
 
 .newFlatButton {
     padding: 0.75rem 1.5rem;
-    background-color: #4a90e2;
-    color: white;
+    background-color: var(--button-blue);
+    color: var(--button-text);
     font-size: 1rem;
     border: none;
     border-radius: 5px;
@@ -34,13 +34,13 @@
 }
 
 .newFlatButton:hover {
-    background-color: #357ab8;
+    background-color: var(--button-blue-hover);
 }
 
 .noResults {
     text-align: center;
     font-size: 1.2rem;
-    color: #ff6f61;
+    color: var(--button-red);
 }
 
 /* Grid Container */
@@ -53,8 +53,8 @@
 
 /* Grid Items (Flat Cards) */
 .gridItem {
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -81,20 +81,21 @@
 .flatDetails {
     width: 50%;
     height: 100%;
+    background-color: var(--card-bg);
     padding: 1rem 1rem 3rem;
     position: relative;
 }
 
 .flatDetails h3 {
     font-size: 1.25rem;
-    color: #4a90e2;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
 .flatDetails p {
     margin: 0.5rem 0;
     font-size: 0.9rem;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 /* Icons */
@@ -110,12 +111,12 @@
 
 .deleteFlat {
     right: 1rem;
-    color: red;
+    color: var(--delete-color);
 }
 
 .editFlat {
     left: 1rem;
-    color: #4a90e2;
+    color: var(--text-primary);
 }
 
 .deleteFlat:hover,

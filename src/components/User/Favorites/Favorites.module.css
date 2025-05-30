@@ -3,15 +3,15 @@
     width: 100%;
     margin: 1rem auto;
     padding: 1.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: var(--page-bg);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .favorites h2 {
     text-align: center;
-    color: #4a90e2;
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
 }
@@ -19,7 +19,7 @@
 .noResults {
     text-align: center;
     font-size: 1.2rem;
-    color: #ff6f61;
+    color: var(--button-red);
 }
 
 /* Grid Container */
@@ -32,8 +32,8 @@
 
 /* Grid Items (Flat Cards) */
 .gridItem {
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -65,19 +65,19 @@
 
 .flatDetails h3 {
     font-size: 1.25rem;
-    color: #4a90e2;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
 .flatDetails p {
     margin: 0.5rem 0;
     font-size: 0.9rem;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 /* Trash Icon */
 .removeFavorite {
-    color: red;
+    color: var(--heart-filled);
     position: absolute;
     bottom: 1rem;
     right: 1rem;

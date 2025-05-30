@@ -2,15 +2,15 @@
     max-width: 35rem;
     margin: 1rem auto;
     padding: 1.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: var(--page-bg);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .editFlat h2 {
     text-align: center;
-    color: #4a90e2;
+    color: var(--text-primary);
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
@@ -44,7 +44,7 @@ input,
 select {
     flex: 2;
     padding: 0.75rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
@@ -52,7 +52,7 @@ select {
 
 input:focus,
 select:focus {
-    border-color: #4a90e2;
+    border-color: var(--text-primary);
     outline: none;
 }
 
@@ -63,14 +63,14 @@ select:focus {
 }
 
 .error {
-    color: red;
+    color: var(--error-color);
     font-size: 0.875rem;
 }
 
 .saveButton {
     padding: 0.75rem;
-    background-color: #4a90e2;
-    color: white;
+    background-color: var(--button-blue);
+    color: var(--button-text);
     font-size: 1rem;
     border: none;
     border-radius: 5px;
@@ -79,18 +79,22 @@ select:focus {
 }
 
 .saveButton:hover {
-    background-color: #357ab8;
+    background-color: var(--button-blue-hover);
 }
 
 .saveButton:disabled {
-    background: #aaa;
+    background-color: var(--button-disabled);
     cursor: not-allowed;
+}
+
+.saveButton:disabled:hover {
+    background-color: var(--button-disabled-hover);
 }
 
 .backButton {
     padding: 0.75rem;
-    background-color: #ff6f61;
-    color: white;
+    background-color: var(--button-red);
+    color: var(--button-text);
     font-size: 1rem;
     border: none;
     border-radius: 5px;
@@ -99,15 +103,15 @@ select:focus {
 }
 
 .backButton:hover {
-    background-color: #e64b40;
+    background-color: var(--button-red-hover);
 }
 
 .imagePreview {
     margin-top: 1rem;
     text-align: center;
     padding: 0.5rem;
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -115,7 +119,7 @@ select:focus {
 .imagePreview p {
     margin-bottom: 0.5rem;
     font-weight: bold;
-    color: #333;
+    color: var(--text-secondary);
     font-size: 1rem;
 }
 
@@ -123,7 +127,7 @@ select:focus {
     width: 100%;
     max-width: 200px;
     height: auto;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     object-fit: cover;

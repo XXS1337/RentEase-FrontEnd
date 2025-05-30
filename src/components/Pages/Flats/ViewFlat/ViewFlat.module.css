@@ -2,8 +2,8 @@
     max-width: 50rem;
     margin: 1rem auto;
     padding: 1.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: var(--page-bg);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     display: flex;
@@ -19,7 +19,7 @@
 
 .header h2 {
     text-align: left;
-    color: #4a90e2;
+    color: var(--text-primary);
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
@@ -52,11 +52,11 @@
 
 .detailsContainer p {
     font-size: 1rem;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .detailsContainer strong {
-    color: #333;
+    color: var(--text-primary);
 }
 
 .icons {
@@ -79,7 +79,7 @@
 }
 
 .backToHomepage {
-    color: #4a90e2;
+    color: var(--button-blue-hover);
 }
 
 
@@ -90,30 +90,30 @@
 }
 
 .editFlat {
-    color: #f39c12;
+    color: var(--edit-color);
 }
 
 .editFlat:hover {
     transform: scale(1.2);
     opacity: 0.8;
-    color: #d87a00;
+    color: var(--edit-color-hover);
 }
 
 /* Hover Effect for Envelopes */
 
 .envelopeIcon {
-    color: #007bff;
+    color: var(--button-blue);
 }
 
 .envelopeIcon:hover {
     transform: scale(1.2);
     opacity: 0.8;
-    color: #007bff;
+    color: var(--button-blue);
 }
 
 /* Active State */
 .envelopeIcon.active {
-    color: #ff5722;
+    color: var(--message-highlight);
 }
 
 .hidden {
@@ -162,9 +162,9 @@
         max-width: 100%;
     }
 
-        .detailsContainer p {
-            font-size: 0.9rem;
-           }
+    .detailsContainer p {
+        font-size: 0.9rem;
+    }
 
     .backToHomepage,
     .editFlat,

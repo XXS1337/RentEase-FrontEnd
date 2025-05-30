@@ -20,14 +20,13 @@
     grid-area: 1/1;
     border: 8px solid;
     border-radius: 50%;
-    border-color: #ff6f61 #ff6f61 #0000 #0000;
+    border-color: var(--button-red) var(--button-red) transparent transparent;
     mix-blend-mode: darken;
     animation: l14 1s infinite linear;
 }
 
 .spinner::after {
-    border-color: #0000 #0000 #4a90e2 #4a90e2;
-    ;
+    border-color: transparent transparent var(--button-blue) var(--button-blue);
     animation-direction: reverse;
 }
 

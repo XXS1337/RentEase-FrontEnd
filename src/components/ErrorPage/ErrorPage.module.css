@@ -6,8 +6,8 @@
     max-width: 35rem;
     margin: 1rem auto;
     padding: 1.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: var(--page-bg);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center
@@ -15,18 +15,18 @@
 
 .errorPage h1 {
     font-size: 2rem;
-    color: #ff6f61;
+    color: var(--button-red);
 }
 
 .errorPage p {
     margin: 1rem 0;
     font-size: 1rem;
-    color: #333;
+    color: var(--text-secondary);
 }
 
 .goBackButton {
-    background-color: #ff6f61;
-    color: white;
+    background-color: var(--button-red);
+    color: var(--button-text);
     border: none;
     border-radius: 5px;
     padding: 0.75rem;
@@ -36,7 +36,7 @@
 }
 
 .goBackButton:hover {
-    background-color: #e65550;
+    background-color: var(--button-red-hover);
 }
 
 @media (max-width: 850px) {

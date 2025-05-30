@@ -14,7 +14,7 @@
 }
 
 .modalContent {
-    background-color: #ffffff;
+    background-color: var(--card-bg);
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -43,25 +43,25 @@
     font-weight: bold;
     transition: all 0.3s ease-in-out;
     text-align: center;
-    color: #ffffff;
+    color: var(--button-text);
 }
 
 .modalButtonYes {
-    background-color: #ff6f61;
+    background-color: var(--button-red);
 
 }
 
 .modalButtonNo {
-    background-color: #4a90e2;
+    background-color: var(--button-blue);
 
 }
 
 .modalButtonNo:hover {
-    background-color: #357ab8;
+    background-color: var(--button-blue-hover);
 }
 
 .modalButtonYes:hover {
-    background-color: #e64b40;
+    background-color: var(--button-red-hover);
 }
 
 .modalButton:focus {

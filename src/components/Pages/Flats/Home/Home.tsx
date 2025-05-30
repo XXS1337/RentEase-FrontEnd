@@ -5,6 +5,8 @@ import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io';
 import axios from './../../../../api/axiosConfig';
 import Spinner from '../../../Shared/Spinner/Spinner';
 import styles from './Home.module.css';
+import ChatBot from './../../../ChatBot/ChatBot';
+import { useAuth } from '../../../../context/AuthContext';
 
 // Loader function to fetch flats and user's favorites (if logged in)
 export const homeLoader = async () => {
@@ -44,6 +46,7 @@ export const homeLoader = async () => {
 const Home: React.FC = () => {
   const { flats: initialFlats, userId } = useLoaderData() as { flats: any[]; userId: string };
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   // State: all flats, filters, sorting, validation and loading
   const [flats, setFlats] = useState<any[]>(initialFlats);
@@ -329,6 +332,7 @@ const Home: React.FC = () => {
           )}
         </div>
       )}
+      {!loading && isAuthenticated && <ChatBot />}
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import './App.css';
 import AppLayout from './components/Layout/AppLayout/AppLayout';
 import Home, { homeLoader } from './components/Pages/Flats/Home/Home';
 import Login, { loginAction } from './components/Auth/Login';
@@ -160,7 +162,9 @@ const router = createBrowserRouter([
 // Main application entry point
 const App: React.FC = () => (
   <AuthProvider>
-    <RouterProvider router={router} />
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </AuthProvider>
 );
 

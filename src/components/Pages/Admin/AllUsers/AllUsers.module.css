@@ -1,14 +1,14 @@
 .allUsers {
     padding: 1rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: var(--page-bg);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .allUsers h2 {
     text-align: center;
-    color: #4a90e2;
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
 }
@@ -37,7 +37,7 @@
 .filters select {
     padding: 0.5rem;
     font-size: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     transition: border-color 0.3s ease-in-out;
     width: 8rem;
@@ -47,15 +47,15 @@
 
 .filters input:focus,
 .filters select:focus {
-    border-color: #007bff;
+    border-color: var(--focus-blue);
     outline: none;
 }
 
 .applyButton,
 .resetButton {
     padding: 0.75rem;
-    background-color: #4a90e2;
-    color: white;
+    background-color: var(--button-blue);
+    color: var(--button-text);
     font-size: 1rem;
     border: none;
     border-radius: 5px;
@@ -65,15 +65,15 @@
 }
 
 .applyButton:hover {
-    background-color: #357ab8;
+    background-color: var(--button-blue-hover);
 }
 
 .resetButton {
-    background-color: #ff6f61;
+    background-color: var(--button-red);
 }
 
 .resetButton:hover {
-    background-color: #e64b40;
+    background-color: var(--button-red-hover);
 }
 
 .sort {
@@ -99,7 +99,7 @@
     width: fit-content;
     padding: 0.5rem;
     font-size: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     transition: all 0.3s ease-in-out;
     align-items: center;
@@ -107,7 +107,7 @@
 }
 
 .sort select:focus {
-    border-color: #4a90e2;
+    border-color: var(--focus-blue);
     outline: none;
 }
 
@@ -116,7 +116,7 @@
     max-width: 100%;
     border-collapse: collapse;
     margin-top: 1rem;
-    background-color: #fff;
+    background-color: var(--card-bg);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
     overflow: hidden;
@@ -124,23 +124,23 @@
 
 .userTable th,
 .userTable td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     padding: 0.5rem;
     text-align: left;
     font-size: 0.9rem;
 }
 
 .userTable th {
-    background-color: #f4f4f4;
+    background-color: var(--table-header-bg);
     font-weight: bold;
 }
 
 .userTable tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: var(--page-bg);
 }
 
 .userTable tr:hover {
-    background-color: #f1f1f1;
+    background-color: var(--table-row-hover-bg);
 }
 
 .userTable button {
@@ -158,21 +158,25 @@
 }
 
 .userTable button:first-of-type {
-    background-color: #007bff;
-    color: #fff;
+    background-color: var(--focus-blue);
+    color: var(--button-text);
 }
 
 .userTable button:nth-of-type(2) {
-    background-color: #28a745;
-    color: #fff;
+    background-color: var(--button-green);
+    color: var(--button-text);
     width: 8rem;
     margin-top: 0.25rem;
     margin-bottom: 0.25rem;
 }
 
 .userTable button:last-of-type {
-    background-color: #dc3545;
-    color: #fff;
+    background-color: var(--button-delete);
+    color: var(--button-text);
+}
+
+.userTable button:last-of-type:hover {
+    background-color: var(--button-delete-hover);
 }
 
 /* Responsive Design */

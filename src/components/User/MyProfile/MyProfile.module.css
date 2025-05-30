@@ -2,37 +2,37 @@
     max-width: 35rem;
     margin: 1rem auto;
     padding: 1.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: var(--page-bg);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .profile h2 {
     text-align: center;
-    color: #4a90e2;
+    color: var(--text-primary);
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
 
 .profileDetails {
     margin-bottom: 1.5rem;
-    background-color: #fff;
+    background-color: var(--card-bg);
     padding: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
 }
 
 .profileDetails h3 {
     margin-bottom: 1rem;
     font-size: 1.25rem;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .profileDetails p {
     margin: 0.5rem 0;
     font-size: 1rem;
-    color: #333;
+    color: var(--text-secondary);
 }
 
 .formTitle {
@@ -69,31 +69,31 @@ label {
 input {
     flex: 2;
     padding: 0.75rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
 }
 
 input:focus {
-    border-color: #4a90e2;
+    border-color: var(--text-primary);
     outline: none;
 }
 
 .error {
-    color: red;
+    color: var(--error-color);
     font-size: 0.875rem;
 }
 
 .duplicateEmail {
-    color: #4a90e2;
+    color: var(--text-primary);
     font-size: 0.875rem;
 }
 
 .updateButton {
     padding: 0.75rem;
-    background-color: #4a90e2;
-    color: white;
+    background-color: var(--button-blue);
+    color: var(--button-text);
     font-size: 1rem;
     border: none;
     border-radius: 5px;
@@ -104,9 +104,9 @@ input:focus {
 
 .backButton {
     padding: 0.75rem;
-    background-color: #4a90e2;
+    background-color: var(--button-blue);
     margin-top: 1rem;
-    color: #fff;
+    color: var(--button-text);
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -117,19 +117,23 @@ input:focus {
 
 .updateButton:hover,
 .backButton:hover {
-    background-color: #357ab8;
+    background-color: var(--button-blue-hover);
 }
 
 .updateButton:disabled {
-    background-color: #aaa;
+    background-color: var(--button-disabled);
     cursor: not-allowed;
+}
+
+.updateButton:disabled:hover {
+    background-color: var(--button-disabled-hover);
 }
 
 .deleteButton {
     padding: 0.75rem;
-    background-color: #e74c3c;
+    background-color: var(--button-red);
     margin-top: 1rem;
-    color: #fff;
+    color: var(--button-text);
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -139,7 +143,7 @@ input:focus {
 }
 
 .deleteButton:hover {
-    background-color: #c0392b;
+    background-color: var(--button-red-hover);
 }
 
 @media (max-width: 850px) {

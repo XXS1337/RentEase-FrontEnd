@@ -1,63 +1,76 @@
 .navbar {
     width: 100%;
-    height: 6rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #4A90E2;
+    background-color: var(--navbar-bg);
     padding: 1rem;
+}
+
+.navbarContainer {
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .navbarLeftSide {
     display: flex;
-    height: 6rem;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbarLogo {
+    display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.navbarLogo {
-    height: 100%;
+.navbarLogo img {
+    height: 4rem;
+    cursor: pointer;
+}
+
+.navbarHeading {
+    color: var(--navbar-text);
+    font-style: italic;
+    font-size: 1.5rem;
+    margin: 0;
+    pointer-events: none;
+}
+
+.navbarLeftSideGreetingTheme {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 1rem;
 }
 
-.navbarLogo img {
-    height: 100%;
-    cursor: pointer;
-}
-
-.navbarLink {
-    height: 100%;
-}
-
-.navbarHeading {
-    color: #FFFFFF;
-    font-style: italic;
-    font-size: 1.5rem;
-    align-items: center;
-    margin: 0;
-    pointer-events: none;
-    /* Make the heading non-clickable */
-}
-
 .userGreeting {
-    color: #FFFFFF;
+    color: var(--navbar-text);
     font-size: 1rem;
     font-weight: bold;
 }
 
-.navbar nav {
+.themeToggle {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    color: var(--navbar-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+/* Navigation links - desktop */
+.navLinks {
     display: flex;
     align-items: center;
     gap: 1rem;
     font-size: 1rem;
-    color: #FFFFFF;
 }
 
 .navbar a,
 .logoutButton {
-    color: #FFFFFF;
+    color: var(--navbar-text);
     text-decoration: none;
     padding: 0.5rem;
     border-radius: 5px;
@@ -71,84 +84,106 @@
 
 .navbar a:hover,
 .logoutButton:hover {
-    color: #2ECC71;
+    color: var(--navbar-hover);
     background-color: transparent;
     box-shadow: none;
 }
 
 .navbar .active {
-    background-color: #FF6F61;
-    color: #FFFFFF;
+    background-color: var(--navbar-active);
+    color: var(--navbar-text);
 }
 
-@media (max-width: 1200px) {
-    .navbar {
+.moonIcon {
+    color: var(--icon-moon);
+}
+
+.sunIcon {
+    color: var(--icon-sun);
+}
+
+.themeToggle:hover svg {
+    transform: rotate(15deg) scale(1.1);
+}
+
+/* Hamburger menu - hidden by default */
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: white;
+    cursor: pointer;
+    padding: 0.25rem 0;
+}
+
+/* Mobile styles */
+@media (max-width: 850px) {
+    .navbarContainer {
         flex-direction: column;
-        height: 10rem;
+        align-items: stretch;
+    }
+
+    .navbarLeftSide {
+        width: 100%;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .hamburger {
+        display: flex;
+        /* order: 1; */
+    }
+
+    /* Hide nav links by default on mobile */
+    .navLinks {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        padding-top: 1rem;
         gap: 0.5rem;
     }
 
-    .navbarLeftSide {
-        width: 100%;
-        justify-content: space-between;
+    /* Show nav links when menu is open */
+    .navLinks.showMenu {
+        display: flex;
+        align-items: flex-start;
     }
 
-    .navbar nav {
-        width: 100%;
-    }
-
-}
-
-@media (max-width: 850px) {
-    .navbar {
-        height: 9rem;
-    }
-
-    .navbarLeftSide {
-        height: 5rem;
+    .navbarLogo img {
+        height: 4rem;
     }
 
     .navbarHeading {
-        font-size: 1.25rem;
+        font-size: 1rem;
     }
-
-    .userGreeting {
-        padding-left: 0.5rem;
-    }
-
-    .navbar nav {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
 }
 
 @media (max-width: 550px) {
 
     .navbar {
-        height: fit-content;
-        padding: 0.25rem;
-    }
-
-    .navbarLogo {
-        height: 5rem;
+        font-size: 1rem;
     }
 
     .navbarLeftSide {
-        height: fit-content;
-        flex-direction: column;
-        align-items: flex-start;
+        flex-wrap: wrap;
     }
 
-    .navbarHeading,
+    .navbarHeading {
+        font-size: 1rem;
+    }
+
     .userGreeting {
         font-size: 1rem;
-        text-align: left;
     }
 
-    .navbar nav {
-        margin-bottom: 0.25rem;
-        gap: 0.5rem;
+    .navLinks {
+        font-size: 1.053rem;
     }
 
+    .logoutButton {
+        font-size: 1rem;
+    }
 }
