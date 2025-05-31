@@ -2,11 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { useLoaderData, useNavigate } from 'react-router-dom';
 import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io';
+import { FaSearchPlus } from 'react-icons/fa';
 import axios from './../../../../api/axiosConfig';
 import Spinner from '../../../Shared/Spinner/Spinner';
 import styles from './Home.module.css';
 import ChatBot from './../../../ChatBot/ChatBot';
 import { useAuth } from '../../../../context/AuthContext';
+import ImageHoverPreview from '../../../Shared/ImageHoverPreview/ImageHoverPreview';
+import { useImageHover } from '../../../../utils/useImageHover';
 
 // Loader function to fetch flats and user's favorites (if logged in)
 export const homeLoader = async () => {
@@ -67,6 +70,7 @@ const Home: React.FC = () => {
   const [sortOption, setSortOption] = useState('');
   const [validationErrors, setValidationErrors] = useState<{ price?: string; area?: string }>({});
   const [loading, setLoading] = useState(true);
+  const { previewImage, hoverPosition, onMouseEnter, onMouseLeave, onMouseMove, previewSize } = useImageHover();
 
   // Helper to map sort option to query format
   const mapSortToQuery = (option: string) => {
@@ -270,68 +274,77 @@ const Home: React.FC = () => {
       {/* Flat Listing or Spinner */}
       {loading ? (
         <Spinner />
+      ) : initialFlats.length === 0 ? (
+        // Case 1: No flats exist in DB
+        <p className={styles.noResults}>No flats available.</p>
+      ) : flats.length === 0 ? (
+        // Case 2: Flats exist, but current filters return nothing
+        <p className={styles.noResults}>No flats match your search criteria.</p>
       ) : (
+        // Case 3: Show the filtered flats
         <div className={styles.gridContainer}>
-          {flats.length === 0 ? (
-            <p className={styles.noResults}>No flats match your search criteria.</p>
-          ) : (
-            flats.map((flat) => (
-              <div className={styles.gridItem} key={flat.id}>
-                <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
-                  <img src={flat.image} alt={flat.adTitle} />
-                </div>
-                <div className={styles.flatDetails}>
-                  <h3>{flat.adTitle}</h3>
-                  <p>
-                    <strong>City:</strong> {flat.city}
-                  </p>
-                  <p>
-                    <strong>Street name:</strong> {flat.streetName}
-                  </p>
-                  <p>
-                    <strong>Street number:</strong> {flat.streetNumber}
-                  </p>
-                  <p>
-                    <strong>Area size:</strong> {flat.areaSize} m²
-                  </p>
-                  <p>
-                    <strong>Has AC:</strong> {flat.hasAC ? 'Yes' : 'No'}
-                  </p>
-                  <p>
-                    <strong>Year built:</strong> {flat.yearBuilt}
-                  </p>
-                  <p>
-                    <strong>Rent price:</strong> {flat.rentPrice} €/month
-                  </p>
-                  <p>
-                    <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
-                  </p>
-
-                  {flat.favorite ? (
-                    <IoMdHeart
-                      className={styles.filledHeart}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleFavorite(flat);
-                      }}
-                    />
-                  ) : (
-                    <IoMdHeartEmpty
-                      className={styles.emptyHeart}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleFavorite(flat);
-                      }}
-                    />
-                  )}
-                </div>
+          {flats.map((flat) => (
+            <div className={styles.gridItem} key={flat.id}>
+              <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
+                <img src={flat.image} alt={flat.adTitle} />
+                {/* Zoom icon shown on hover */}
+                <FaSearchPlus className={styles.zoomIcon} title="Preview Image" onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
               </div>
-            ))
-          )}
+              <div className={styles.flatDetails}>
+                <h3>{flat.adTitle}</h3>
+                <p>
+                  <strong>City:</strong> {flat.city}
+                </p>
+                <p>
+                  <strong>Street name:</strong> {flat.streetName}
+                </p>
+                <p>
+                  <strong>Street number:</strong> {flat.streetNumber}
+                </p>
+                <p>
+                  <strong>Area size:</strong> {flat.areaSize} m²
+                </p>
+                <p>
+                  <strong>Has AC:</strong> {flat.hasAC ? 'Yes' : 'No'}
+                </p>
+                <p>
+                  <strong>Year built:</strong> {flat.yearBuilt}
+                </p>
+                <p>
+                  <strong>Rent price:</strong> {flat.rentPrice} €/month
+                </p>
+                <p>
+                  <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
+                </p>
+
+                {flat.favorite ? (
+                  <IoMdHeart
+                    className={styles.filledHeart}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleFavorite(flat);
+                    }}
+                  />
+                ) : (
+                  <IoMdHeartEmpty
+                    className={styles.emptyHeart}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleFavorite(flat);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
+
+      {/* Modal preview */}
+      <ImageHoverPreview image={previewImage} position={hoverPosition} size={previewSize} />
+
       {!loading && isAuthenticated && <ChatBot />}
     </div>
   );

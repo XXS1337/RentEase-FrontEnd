@@ -3,6 +3,9 @@ import { useLoaderData, useNavigate, redirect } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from './../../../api/axiosConfig';
 import { FaRegTrashAlt, FaEdit } from 'react-icons/fa';
+import { FaSearchPlus } from 'react-icons/fa';
+import ImageHoverPreview from '../../Shared/ImageHoverPreview/ImageHoverPreview';
+import { useImageHover } from '../../../utils/useImageHover';
 import styles from './MyFlats.module.css';
 
 // Loader to fetch the flats added by the currently logged-in user
@@ -33,6 +36,7 @@ export const myFlatsLoader = async () => {
 const MyFlats: React.FC = () => {
   const { flats: initialFlats } = useLoaderData() as { flats: any[] };
   const navigate = useNavigate();
+  const { previewImage, hoverPosition, onMouseEnter, onMouseLeave, onMouseMove, previewSize } = useImageHover();
 
   // State to hold the user's flats
   const [myFlats, setMyFlats] = useState<any[]>(initialFlats);
@@ -72,6 +76,8 @@ const MyFlats: React.FC = () => {
             <div className={styles.gridItem} key={flat.id}>
               <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
                 <img src={flat.image} alt={flat.adTitle} />
+                {/* Zoom icon shown on hover */}
+                <FaSearchPlus className={styles.zoomIcon} title="Preview Image" onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
               </div>
               <div className={styles.flatDetails}>
                 <h3>{flat.adTitle}</h3>
@@ -110,6 +116,8 @@ const MyFlats: React.FC = () => {
           ))}
         </div>
       )}
+      {/* Modal preview */}
+      <ImageHoverPreview image={previewImage} position={hoverPosition} size={previewSize} />
     </div>
   );
 };

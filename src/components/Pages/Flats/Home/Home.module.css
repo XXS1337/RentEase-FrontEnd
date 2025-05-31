@@ -159,6 +159,9 @@
 
 .flatImage {
     width: 50%;
+    position: relative;
+    overflow: hidden;
+
 }
 
 .flatImage img {
@@ -211,6 +214,25 @@
     transform: scale(1.2);
 }
 
+/* Zoom icon and image */
+.zoomIcon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 1.5rem;
+    color: var(--button-text);
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 0.3rem;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.flatImage:hover .zoomIcon {
+    opacity: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 850px) {
 
@@ -244,6 +266,10 @@
     .emptyHeart {
         bottom: 0.3rem;
         right: 0.5rem;
+    }
+
+    .zoomIcon {
+        display: none !important;
     }
 }
 
@@ -324,6 +350,7 @@
     .flatImage,
     .flatDetails {
         width: 100%;
+        position: relative;
     }
 
     .flatImage img {

@@ -3,6 +3,9 @@ import { useLoaderData, useNavigate, redirect } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from './../../../api/axiosConfig';
 import { IoMdHeart } from 'react-icons/io';
+import { FaSearchPlus } from 'react-icons/fa';
+import ImageHoverPreview from '../../Shared/ImageHoverPreview/ImageHoverPreview';
+import { useImageHover } from '../../../utils/useImageHover';
 import styles from './Favorites.module.css';
 
 // Loader function to fetch the user's favorite flats
@@ -40,6 +43,7 @@ export const favoritesLoader = async () => {
 const Favorites: React.FC = () => {
   const { favorites } = useLoaderData() as { favorites: any[] };
   const navigate = useNavigate();
+    const { previewImage, hoverPosition, onMouseEnter, onMouseLeave, onMouseMove, previewSize } = useImageHover();
 
   // Handle the removal of a flat from user's favorites
   const handleRemoveFavorite = async (flatId: string) => {
@@ -70,6 +74,8 @@ const Favorites: React.FC = () => {
               {/* Image section (click navigates to flat details) */}
               <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
                 <img src={flat.image} alt={flat.adTitle} />
+                {/* Zoom icon shown on hover */}
+                <FaSearchPlus className={styles.zoomIcon} title="Preview Image" onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
               </div>
 
               {/* Flat details */}
@@ -106,6 +112,8 @@ const Favorites: React.FC = () => {
           ))}
         </div>
       )}
+      {/* Modal preview */}
+      <ImageHoverPreview image={previewImage} position={hoverPosition} size={previewSize} />
     </div>
   );
 };

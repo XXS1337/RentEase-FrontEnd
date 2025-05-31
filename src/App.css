@@ -90,7 +90,7 @@ body.dark {
 
 /* Light mode defaults */
 body {
-    background-color: var(--button-text);
+    background-color: #FFFFFF;
     color: #000000;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -98,7 +98,7 @@ body {
 /* Dark mode override */
 body.dark {
     background-color: #121212;
-    color: var(--button-text);
+    color: #FFFFFF;
 }
 
 /* Optional global element adjustments */
