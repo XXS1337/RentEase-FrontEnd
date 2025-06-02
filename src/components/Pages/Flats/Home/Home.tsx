@@ -14,19 +14,17 @@ import { useImageHover } from '../../../../utils/useImageHover';
 // Loader function to fetch flats and user's favorites (if logged in)
 export const homeLoader = async () => {
   const token = Cookies.get('token');
-  if (!token) return { flats: [], userId: null };
-
-  let userData;
+  let userData = null;
 
   try {
-    // Fetch logged-in user
-    const res = await axios.get('/users/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    userData = res.data;
+    if (token) {
+      const res = await axios.get('/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      userData = res.data;
+    }
   } catch (err) {
-    console.warn('Unauthorized or invalid token');
-    return { flats: [], userId: null };
+    console.warn('Invalid token or not logged in, proceeding without user data');
   }
 
   // Fetch all flats
@@ -43,7 +41,10 @@ export const homeLoader = async () => {
     image: flat.image?.url,
   }));
 
-  return { flats, userId: userData.currentUser._id };
+  return {
+    flats,
+    userId: userData?.currentUser?._id || null,
+  };
 };
 
 const Home: React.FC = () => {
