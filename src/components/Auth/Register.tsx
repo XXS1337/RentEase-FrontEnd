@@ -169,8 +169,8 @@ const Register: React.FC = () => {
           <div className={styles.inputContainer}>
             <label htmlFor="email">Email:</label>
             <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} required />
-            {isCheckingEmail && <p className={styles.duplicateEmail}>Checking email availability...</p>}
           </div>
+          {isCheckingEmail && <p className={styles.duplicateEmail}>Checking email availability...</p>}
           {fieldErrors.email && <p className={styles.error}>{fieldErrors.email}</p>}
         </div>
 

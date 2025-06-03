@@ -9,6 +9,12 @@ const api = axios.create({
   withCredentials: true, // Send cookies with every request (needed for authentication/session)
 });
 
+// Helper function to check if the session expiration alert was already shown in this browser tab
+const hasSessionExpiredAlertBeenShown = () => sessionStorage.getItem('sessionExpired') === '1';
+
+// Helper to mark that the alert has been shown
+const markSessionExpiredAlertAsShown = () => sessionStorage.setItem('sessionExpired', '1');
+
 // Set up a response interceptor to handle errors globally
 api.interceptors.response.use(
   (response) => response, // Simply return the response if it's successful
@@ -19,10 +25,12 @@ api.interceptors.response.use(
     // Define a list of known auth-related error conditions
     const isAuthExpired = error?.response?.status === 401 && (message === 'Token expired!' || message === 'Invalid token!' || message === 'User not found' || message === 'Token is not valid' || message === 'Session expired. Please login again');
 
-    // If the error indicates the session is no longer valid
-    if (isAuthExpired) {
+    // If the error indicates the session is no longer valid and the alert was not yet shown in this tab
+    if (isAuthExpired && !hasSessionExpiredAlertBeenShown()) {
+      markSessionExpiredAlertAsShown(); // Mark the alert as shown to prevent duplicate alerts in this tab
+
       document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; // Remove the authentication token cookie
-      alert('Session expired. Please log in again.'); // Inform the user their session expired
+      alert('Session expired. Please log in again.'); // Inform the user their session expired. Show the alert only once per session
       window.location.href = '/login'; // Redirect the user to the login page
     }
 

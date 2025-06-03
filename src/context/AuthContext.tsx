@@ -88,7 +88,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Log in function: saves token to cookies and sets user
   const login = (userData: User, token: string) => {
-    Cookies.set('token', token, { expires: 1 }); // Expires in 1 day
+    // Save token in browser cookie (expires in 1 day, but JWT itself is valid only for LOGIN_EXPIRES duration set in backend)
+    Cookies.set('token', token, { expires: 1 });
+
+    // Reset the "sessionExpired" flag after login so alerts can appear again on next expiration
+    sessionStorage.removeItem('sessionExpired');
+
     setUser({ ...(userData as BackendUser), id: (userData as BackendUser)._id });
   };
 
