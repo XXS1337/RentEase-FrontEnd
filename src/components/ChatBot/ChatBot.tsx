@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from '../../api/axiosConfig';
-import styles from './ChatBot.module.css';
 import Cookies from 'js-cookie';
 import { FaTimes } from 'react-icons/fa';
 import { BsChatDots } from 'react-icons/bs';
+import { useTranslate } from '../../i18n/useTranslate';
+import styles from './ChatBot.module.css';
 
 // Define the exact type for sender values
 interface Message {
@@ -13,6 +14,7 @@ interface Message {
 }
 
 const ChatBot: React.FC = () => {
+  const t = useTranslate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,12 +54,12 @@ const ChatBot: React.FC = () => {
       const botText =
         botLinks.length > 0
           ? '' // Don't display message text if we have links
-          : res.data?.message || 'Sorry, I could not understand your request.';
+          : res.data?.message || t('chatUnknown');
 
       const botMessage: Message = { sender: 'bot', text: botText, links: botLinks };
       setMessages((prev) => [...prev, botMessage]);
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Something went wrong.';
+      const errorMsg = err.response?.data?.message || t('chatError');
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
     } finally {
       setLoading(false);
@@ -90,14 +92,14 @@ const ChatBot: React.FC = () => {
                 )}
               </div>
             ))}
-            {loading && <div className={styles.botMsg}>Thinking...</div>}
+            {loading && <div className={styles.botMsg}>{t('thinking')}</div>}
             <div ref={chatEndRef} />
           </div>
 
           <form onSubmit={handleSubmit} className={styles.inputArea}>
-            <input type="text" placeholder="Ask me about flats..." value={input} onChange={(e) => setInput(e.target.value)} />
+            <input type="text" placeholder={t('chatPlaceholder')} value={input} onChange={(e) => setInput(e.target.value)} />
             <button type="submit" disabled={loading || !input.trim()}>
-              Send
+              {t('send')}
             </button>
           </form>
         </div>

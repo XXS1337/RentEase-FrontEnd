@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, useActionData, useNavigate } from 'react-router-dom';
 import { validateField } from '../../utils/validateField';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslate } from '../../i18n/useTranslate';
 import axios from '../../api/axiosConfig';
 import styles from './Auth.module.css';
 
@@ -20,11 +21,16 @@ export const loginAction = async ({ request }: { request: Request }) => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
+  // ✅ Extract language from cookie header (server-side)
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const langMatch = cookieHeader.match(/language=(en|ro)/);
+  const lang = (langMatch?.[1] || 'en') as 'en' | 'ro';
+
   const errors: LoginFieldErrors = {};
 
   // Validate both fields before sending the request
-  errors.email = await validateField('email', email);
-  errors.password = await validateField('password', password);
+  errors.email = await validateField('email', email, { lang });
+  errors.password = await validateField('password', password, { lang });
 
   // Remove fields with no errors
   Object.keys(errors).forEach((key) => {
@@ -51,6 +57,8 @@ export const loginAction = async ({ request }: { request: Request }) => {
 };
 
 const Login: React.FC = () => {
+  const t = useTranslate();
+
   const actionData = useActionData<{ success?: boolean; errors?: LoginFieldErrors; user?: any; token?: string }>();
 
   const navigate = useNavigate();
@@ -67,7 +75,7 @@ const Login: React.FC = () => {
       // Successful login
       setGeneralError(null);
       login(actionData.user, actionData.token);
-      alert('Login successful! Redirecting to home page.');
+      alert(t('loginSuccess'));
       navigate('/');
     }
 
@@ -84,7 +92,8 @@ const Login: React.FC = () => {
   // Validate field on blur
   const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const error = await validateField(name, value);
+    const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+    const error = await validateField(name, value, { lang });
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
@@ -103,12 +112,12 @@ const Login: React.FC = () => {
 
   return (
     <div className={styles.auth}>
-      <h2>Login</h2>
+      <h2>{t('login')}</h2>
       <Form method="post" className={styles.form}>
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Email" value={formData.email} onBlur={handleBlur} onChange={handleChange} required />
+            <label htmlFor="email">{t('emailLabel')}</label>
+            <input type="email" id="email" name="email" placeholder={t('emailPlaceholder')} value={formData.email} onBlur={handleBlur} onChange={handleChange} required />
           </div>
           {fieldErrors.email && <p className={styles.error}>{fieldErrors.email}</p>}
           {actionData?.errors?.email && <p className={styles.error}>{actionData.errors.email}</p>}
@@ -116,8 +125,8 @@ const Login: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="Password" value={formData.password} onBlur={handleBlur} onChange={handleChange} required />
+            <label htmlFor="password">{t('passwordLabel')}</label>
+            <input type="password" id="password" name="password" placeholder={t('passwordPlaceholder')} value={formData.password} onBlur={handleBlur} onChange={handleChange} required />
           </div>
           {fieldErrors.password && <p className={styles.error}>{fieldErrors.password}</p>}
           {actionData?.errors?.password && <p className={styles.error}>{actionData.errors.password}</p>}
@@ -128,7 +137,7 @@ const Login: React.FC = () => {
 
         {/* Submit button */}
         <button type="submit" disabled={!isFormValid()}>
-          Login
+          {t('login')}
         </button>
       </Form>
     </div>

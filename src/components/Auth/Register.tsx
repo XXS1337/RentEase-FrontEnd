@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, useActionData, useNavigate } from 'react-router-dom';
 import { validateField } from '../../utils/validateField';
+import { useTranslate } from '../../i18n/useTranslate';
 import axios from '../../api/axiosConfig';
 import styles from './Auth.module.css';
 
@@ -29,15 +30,17 @@ export const registerAction = async ({ request }: { request: Request }) => {
   const confirmPassword = formData.get('confirmPassword') as string;
   const birthDate = formData.get('birthDate') as string;
 
+  const lang = (formData.get('lang') as 'en' | 'ro') || 'en';
+
   const errors: FieldErrors = {};
 
   // Run validation on all fields
-  errors.firstName = await validateField('firstName', firstName);
-  errors.lastName = await validateField('lastName', lastName);
-  errors.email = await validateField('email', email, { checkEmail: true });
-  errors.password = await validateField('password', password);
-  errors.confirmPassword = await validateField('confirmPassword', confirmPassword, { password });
-  errors.birthDate = await validateField('birthDate', birthDate);
+  errors.firstName = await validateField('firstName', firstName, { lang });
+  errors.lastName = await validateField('lastName', lastName, { lang });
+  errors.email = await validateField('email', email, { lang, checkEmail: true });
+  errors.password = await validateField('password', password, { lang });
+  errors.confirmPassword = await validateField('confirmPassword', confirmPassword, { password, lang });
+  errors.birthDate = await validateField('birthDate', birthDate, { lang });
 
   // Remove any fields with no errors
   Object.keys(errors).forEach((key) => {
@@ -71,6 +74,7 @@ export const registerAction = async ({ request }: { request: Request }) => {
 };
 
 const Register: React.FC = () => {
+  const t = useTranslate();
   const actionData = useActionData<{ success?: boolean; errors?: FieldErrors }>();
   const navigate = useNavigate();
 
@@ -91,7 +95,7 @@ const Register: React.FC = () => {
   // Navigate to login page on successful registration
   useEffect(() => {
     if (actionData?.success) {
-      alert('Registration successful! Redirecting to login page.');
+      alert(t('registrationSuccess'));
       navigate('/login');
     }
     if (actionData?.errors?.general) {
@@ -103,9 +107,11 @@ const Register: React.FC = () => {
   const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
+    const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+
     if (name === 'email') {
       // 1) Validate email format
-      const formatError = await validateField('email', value);
+      const formatError = await validateField('email', value, { lang });
       if (formatError) {
         setFieldErrors((prev) => ({ ...prev, email: formatError }));
         return;
@@ -117,16 +123,16 @@ const Register: React.FC = () => {
       try {
         const res = await axios.post('/users/checkEmail', { email: value });
         const available = res.data?.available;
-        const error = available ? '' : 'Email address not available.';
+        const error = available ? '' : t('emailTaken');
         setFieldErrors((prev) => ({ ...prev, email: error }));
       } catch (error) {
-        setFieldErrors((prev) => ({ ...prev, email: 'Failed to check email availability. Please try again.' }));
+        setFieldErrors((prev) => ({ ...prev, email: t('emailCheckFailed') }));
       } finally {
         setIsCheckingEmail(false);
       }
     } else {
       // Validate other fields
-      const error = await validateField(name, value, { password: formData.password });
+      const error = await validateField(name, value, { lang, password: formData.password });
       setFieldErrors((prev) => ({ ...prev, [name]: error }));
     }
   };
@@ -147,28 +153,29 @@ const Register: React.FC = () => {
 
   return (
     <div className={styles.auth}>
-      <h2>Register</h2>
+      <h2>{t('register')}</h2>
       <Form method="post" className={styles.form}>
+        <input type="hidden" name="lang" value={localStorage.getItem('language') || 'en'} />
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="firstName">First Name:</label>
-            <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="firstName">{t('firstNameLabel')}</label>
+            <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} onBlur={handleBlur} placeholder={t('firstNamePlaceholder')} required />
           </div>
           {fieldErrors.firstName && <p className={styles.error}>{fieldErrors.firstName}</p>}
         </div>
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="lastName">Last Name:</label>
-            <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="lastName">{t('lastNameLabel')}</label>
+            <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} onBlur={handleBlur} placeholder={t('lastNamePlaceholder')} required />
           </div>
           {fieldErrors.lastName && <p className={styles.error}>{fieldErrors.lastName}</p>}
         </div>
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="email">Email:</label>
-            <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="email">{t('emailLabel')}</label>
+            <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} placeholder={t('emailPlaceholder')} required />
           </div>
           {isCheckingEmail && <p className={styles.duplicateEmail}>Checking email availability...</p>}
           {fieldErrors.email && <p className={styles.error}>{fieldErrors.email}</p>}
@@ -176,23 +183,23 @@ const Register: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="password">Password:</label>
-            <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="password">{t('passwordLabel')}</label>
+            <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} placeholder={t('passwordPlaceholder')} required />
           </div>
           {fieldErrors.password && <p className={styles.error}>{fieldErrors.password}</p>}
         </div>
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="confirmPassword">Confirm Password:</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} placeholder={t('confirmPasswordPlaceholder')} required />
           </div>
           {fieldErrors.confirmPassword && <p className={styles.error}>{fieldErrors.confirmPassword}</p>}
         </div>
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="birthDate">Birth Date:</label>
+            <label htmlFor="birthDate">{t('birthDateLabel')}</label>
             <input type="date" id="birthDate" name="birthDate" value={formData.birthDate} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.birthDate && <p className={styles.error}>{fieldErrors.birthDate}</p>}
@@ -203,7 +210,7 @@ const Register: React.FC = () => {
 
         {/* Submit button */}
         <button type="submit" disabled={!isFormValid() || isCheckingEmail}>
-          Register
+          {t('register')}
         </button>
       </Form>
     </div>

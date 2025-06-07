@@ -2,6 +2,8 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
+
 import './App.css';
 import AppLayout from './components/Layout/AppLayout/AppLayout';
 import Home, { homeLoader } from './components/Pages/Flats/Home/Home';
@@ -163,7 +165,9 @@ const router = createBrowserRouter([
 const App: React.FC = () => (
   <AuthProvider>
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <LanguageProvider>
+        <RouterProvider router={router} />
+      </LanguageProvider>
     </ThemeProvider>
   </AuthProvider>
 );

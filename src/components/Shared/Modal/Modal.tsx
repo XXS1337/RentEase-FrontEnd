@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import { useTranslate } from '../../../i18n/useTranslate';
+
 import styles from './Modal.module.css';
 
 // Props for the Modal component
@@ -12,6 +14,8 @@ type ModalProps = {
 
 // Modal component for confirmation dialogs
 const Modal: React.FC<ModalProps> = ({ message, onYes, onNo, yesText, yesDisabled }) => {
+  const t = useTranslate();
+
   // Function to handle "Escape" key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,10 +39,10 @@ const Modal: React.FC<ModalProps> = ({ message, onYes, onNo, yesText, yesDisable
         <p>{message}</p>
         <div className={styles.modalButtons}>
           <button className={`${styles.modalButton} ${styles.modalButtonNo}`} onClick={onNo}>
-            No
+            {t('no')}
           </button>
           <button className={`${styles.modalButton} ${styles.modalButtonYes}`} onClick={onYes} disabled={yesDisabled}>
-            {yesText || 'Yes'}
+            {yesText || t('yes')}
           </button>
         </div>
       </div>

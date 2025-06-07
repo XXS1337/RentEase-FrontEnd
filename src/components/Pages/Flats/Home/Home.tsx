@@ -10,6 +10,7 @@ import ChatBot from './../../../ChatBot/ChatBot';
 import { useAuth } from '../../../../context/AuthContext';
 import ImageHoverPreview from '../../../Shared/ImageHoverPreview/ImageHoverPreview';
 import { useImageHover } from '../../../../utils/useImageHover';
+import { useTranslate } from '../../../../i18n/useTranslate';
 
 // Loader function to fetch flats and user's favorites (if logged in)
 export const homeLoader = async () => {
@@ -48,6 +49,7 @@ export const homeLoader = async () => {
 };
 
 const Home: React.FC = () => {
+  const t = useTranslate();
   const { flats: initialFlats, userId } = useLoaderData() as { flats: any[]; userId: string };
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -143,12 +145,12 @@ const Home: React.FC = () => {
     const minPrice = parseFloat(pendingFilters.minPrice);
     const maxPrice = parseFloat(pendingFilters.maxPrice);
     if (pendingFilters.minPrice && pendingFilters.maxPrice && minPrice > maxPrice) {
-      errors.price = 'Min price must be less than max price';
+      errors.price = t('priceError');
     }
     const minArea = parseFloat(pendingFilters.minArea);
     const maxArea = parseFloat(pendingFilters.maxArea);
     if (pendingFilters.minArea && pendingFilters.maxArea && minArea > maxArea) {
-      errors.area = 'Min area must be less than max area';
+      errors.area = t('areaError');
     }
     setValidationErrors(errors);
   }, [pendingFilters]);
@@ -224,29 +226,29 @@ const Home: React.FC = () => {
 
   return (
     <div className={styles.home}>
-      <h2>Available Flats</h2>
+      <h2>{t('availableFlats')}</h2>
 
       {/* Filters Section */}
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          <label htmlFor="city">City:</label>
-          <input type="text" id="city" name="city" value={pendingFilters.city} onChange={handleFilterChange} placeholder="Enter city" />
+          <label htmlFor="city">{t('city')}</label>
+          <input type="text" id="city" name="city" value={pendingFilters.city} onChange={handleFilterChange} placeholder={t('enterCity')} />
         </div>
         <div className={styles.filterGroup}>
-          <label>Price Range:</label>
-          <input type="number" name="minPrice" value={pendingFilters.minPrice} onChange={handleFilterChange} placeholder="Min (€)" />
-          <input type="number" name="maxPrice" value={pendingFilters.maxPrice} onChange={handleFilterChange} placeholder="Max (€)" />
+          <label>{t('priceRange')}</label>
+          <input type="number" name="minPrice" value={pendingFilters.minPrice} onChange={handleFilterChange} placeholder={t('minPrice')} />
+          <input type="number" name="maxPrice" value={pendingFilters.maxPrice} onChange={handleFilterChange} placeholder={t('maxPrice')} />
         </div>
         <div className={styles.filterGroup}>
-          <label>Area Size (m²):</label>
-          <input type="number" name="minArea" value={pendingFilters.minArea} onChange={handleFilterChange} placeholder="Min" />
-          <input type="number" name="maxArea" value={pendingFilters.maxArea} onChange={handleFilterChange} placeholder="Max" />
+          <label>{t('areaSize')} (m²):</label>
+          <input type="number" name="minArea" value={pendingFilters.minArea} onChange={handleFilterChange} placeholder={t('min')} />
+          <input type="number" name="maxArea" value={pendingFilters.maxArea} onChange={handleFilterChange} placeholder={t('max')} />
         </div>
         <button onClick={applyFilters} className={styles.applyButton} disabled={Object.keys(validationErrors).length > 0}>
-          Apply Filters
+          {t('applyFilters')}
         </button>
         <button onClick={resetFilters} className={styles.resetButton}>
-          Reset Filters
+          {t('resetFilters')}
         </button>
       </div>
 
@@ -259,15 +261,15 @@ const Home: React.FC = () => {
       {/* Sorting Section */}
       <div className={styles.sort}>
         <div className={styles.sortContainer}>
-          <label htmlFor="sortOptions">Sort By:</label>
+          <label htmlFor="sortOptions">{t('sortBy')}</label>
           <select id="sortOptions" value={sortOption} onChange={handleSortChange}>
-            <option value="">None</option>
-            <option value="cityAsc">City (A-Z)</option>
-            <option value="cityDesc">City (Z-A)</option>
-            <option value="priceAsc">Price (Low to High)</option>
-            <option value="priceDesc">Price (High to Low)</option>
-            <option value="areaAsc">Area Size (Small to Large)</option>
-            <option value="areaDesc">Area Size (Large to Small)</option>
+            <option value="">{t('none')}</option>
+            <option value="cityAsc">{t('cityAZ')}</option>
+            <option value="cityDesc">{t('cityZA')}</option>
+            <option value="priceAsc">{t('priceAsc')}</option>
+            <option value="priceDesc">{t('priceDesc')}</option>
+            <option value="areaAsc">{t('areaAsc')}</option>
+            <option value="areaDesc">{t('areaDesc')}</option>
           </select>
         </div>
       </div>
@@ -277,10 +279,10 @@ const Home: React.FC = () => {
         <Spinner />
       ) : initialFlats.length === 0 ? (
         // Case 1: No flats exist in DB
-        <p className={styles.noResults}>No flats available.</p>
+        <p className={styles.noResults}>{t('noFlats')}</p>
       ) : flats.length === 0 ? (
         // Case 2: Flats exist, but current filters return nothing
-        <p className={styles.noResults}>No flats match your search criteria.</p>
+        <p className={styles.noResults}>{t('noFlatsMatch')}</p>
       ) : (
         // Case 3: Show the filtered flats
         <div className={styles.gridContainer}>
@@ -289,33 +291,33 @@ const Home: React.FC = () => {
               <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
                 <img src={flat.image} alt={flat.adTitle} />
                 {/* Zoom icon shown on hover */}
-                <FaSearchPlus className={styles.zoomIcon} title="Preview Image" onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
+                <FaSearchPlus className={styles.zoomIcon} title={t('previewImage')} onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
               </div>
               <div className={styles.flatDetails}>
                 <h3>{flat.adTitle}</h3>
                 <p>
-                  <strong>City:</strong> {flat.city}
+                  <strong>{t('city')}</strong> {flat.city}
                 </p>
                 <p>
-                  <strong>Street name:</strong> {flat.streetName}
+                  <strong>{t('streetName')}</strong> {flat.streetName}
                 </p>
                 <p>
-                  <strong>Street number:</strong> {flat.streetNumber}
+                  <strong>{t('streetNumber')}</strong> {flat.streetNumber}
                 </p>
                 <p>
-                  <strong>Area size:</strong> {flat.areaSize} m²
+                  <strong>{t('areaSize')}:</strong> {flat.areaSize} m²
                 </p>
                 <p>
-                  <strong>Has AC:</strong> {flat.hasAC ? 'Yes' : 'No'}
+                  <strong>{t('hasAC')}</strong> {flat.hasAC ? t('yes') : t('no')}
                 </p>
                 <p>
-                  <strong>Year built:</strong> {flat.yearBuilt}
+                  <strong>{t('yearBuilt')}</strong> {flat.yearBuilt}
                 </p>
                 <p>
-                  <strong>Rent price:</strong> {flat.rentPrice} €/month
+                  <strong>{t('rentPrice')}</strong> {flat.rentPrice} {t('euroPerMonth')}
                 </p>
                 <p>
-                  <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
+                  <strong>{t('dateAvailable')}</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
                 </p>
 
                 {flat.favorite ? (

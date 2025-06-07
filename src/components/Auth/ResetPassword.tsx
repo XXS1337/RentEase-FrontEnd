@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, useActionData } from 'react-router-dom';
 import axios from '../../api/axiosConfig';
 import { validateField } from '../../utils/validateField';
+import { useTranslate } from '../../i18n/useTranslate';
 import styles from './Auth.module.css';
 
 // Define possible error types for the reset password form
@@ -14,11 +15,13 @@ export const resetPasswordAction = async ({ request, params }: { request: Reques
   const confirmPassword = formData.get('confirmPassword') as string;
   const token = params.token;
 
+  const lang = (formData.get('lang') as 'en' | 'ro') || 'en';
+
   const errors: ResetPasswordErrors = {};
 
   // Validate both fields
-  errors.password = await validateField('password', password);
-  errors.confirmPassword = await validateField('confirmPassword', confirmPassword, { password });
+  errors.password = await validateField('password', password, { lang });
+  errors.confirmPassword = await validateField('confirmPassword', confirmPassword, { password, lang });
 
   // Ensure the token exists
   if (!token) errors.general = 'Invalid or missing token.';
@@ -45,6 +48,8 @@ export const resetPasswordAction = async ({ request, params }: { request: Reques
 };
 
 const ResetPassword: React.FC = () => {
+  const t = useTranslate(); //
+
   const actionData = useActionData() as { success?: boolean; errors?: ResetPasswordErrors };
 
   // Local form state
@@ -61,7 +66,7 @@ const ResetPassword: React.FC = () => {
     if (actionData) {
       setIsSubmitting(false);
       if (actionData.success) {
-        alert('Password has been reset! You can now log in.');
+        alert(t('resetSuccess'));
         window.location.href = '/login';
       } else if (actionData.errors) {
         setFieldErrors(actionData.errors);
@@ -93,7 +98,9 @@ const ResetPassword: React.FC = () => {
   // Validate field on blur
   const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const error = await validateField(name, value, { password: formData.password });
+    const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+
+    const error = await validateField(name, value, { password: formData.password, lang });
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
@@ -102,30 +109,31 @@ const ResetPassword: React.FC = () => {
 
   return (
     <div className={styles.auth}>
-      <h2>Reset Password</h2>
+      <h2>{t('resetPasswordTitle')}</h2>
       <Form method="post" className={styles.form} onSubmit={() => setIsSubmitting(true)}>
+        <input type="hidden" name="lang" value={localStorage.getItem('language') || 'en'} />
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="password">New Password:</label>
-            <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="password">{t('newPasswordLabel')}</label>
+            <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} placeholder={t('newPasswordPlaceholder')} required />
           </div>
           {fieldErrors.password && <p className={styles.error}>{fieldErrors.password}</p>}
         </div>
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="confirmPassword">Confirm Password:</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} placeholder={t('confirmPasswordPlaceholder')} required />
           </div>
           {fieldErrors.confirmPassword && <p className={styles.error}>{fieldErrors.confirmPassword}</p>}
         </div>
 
         {/* General error or redirect countdown message */}
         {fieldErrors.general && <p className={styles.error}>{fieldErrors.general}</p>}
-        {showRedirectNotice && <p className={styles.error}>Redirecting to Forgot Password in {countdown}...</p>}
+        {showRedirectNotice && <p className={styles.error}>{t('redirectingIn', { seconds: countdown })}</p>}
 
         <button type="submit" disabled={isSubmitting || !isFormValid} className={styles.saveButton}>
-          {isSubmitting ? 'Resetting...' : 'Reset Password'}
+          {isSubmitting ? t('resetting') : t('resetPassword')}
         </button>
       </Form>
     </div>

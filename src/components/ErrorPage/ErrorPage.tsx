@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './ErrorPage.module.css';
+import { useTranslate } from '../../i18n/useTranslate'; // Translation hook
 
 // ErrorPage component to display when a route is not found or an error occurs
 const ErrorPage: React.FC = () => {
   const navigate = useNavigate();
+  const t = useTranslate(); // Access translation function
 
   const handleGoBack = () => {
     navigate('/');
@@ -12,10 +14,10 @@ const ErrorPage: React.FC = () => {
 
   return (
     <div className={styles.errorPage}>
-      <h1>Oops! Something went wrong</h1>
-      <p>We couldn’t find the page you were looking for.</p>
+      <h1>{t('errorTitle')}</h1>
+      <p>{t('errorDescription')}</p>
       <button className={styles.goBackButton} onClick={handleGoBack}>
-        Go to Home page
+        {t('goHome')}
       </button>
     </div>
   );

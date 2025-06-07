@@ -3,10 +3,11 @@ import type { ChangeEvent, FocusEvent } from 'react';
 import { useActionData, Form, useNavigate, useLoaderData, redirect } from 'react-router-dom';
 import { validateField } from '../../../../utils/validateField';
 import type { Flat, FieldErrors } from '../../../../types/Flat';
-import styles from './EditFlat.module.css';
 import axios from '../../../../api/axiosConfig';
 import Cookies from 'js-cookie';
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router-dom';
+import { useTranslate } from '../../../../i18n/useTranslate';
+import styles from './EditFlat.module.css';
 
 // Loader function to fetch the flat data and validate access rights
 export const editFlatLoader = async ({ params }: LoaderFunctionArgs) => {
@@ -113,6 +114,7 @@ export const editFlatAction = async ({ request, params }: ActionFunctionArgs) =>
 };
 
 const EditFlat: React.FC = () => {
+  const t = useTranslate();
   const flatData = useLoaderData<Flat>();
   const actionData = useActionData<{ success?: boolean; errors?: FieldErrors }>();
   const navigate = useNavigate();
@@ -149,9 +151,10 @@ const EditFlat: React.FC = () => {
     const target = e.target as HTMLInputElement;
     const { name, value, files } = target;
     const fieldValue = name === 'image' ? files?.[0]?.name || '' : value;
-    const error = await validateField(name === 'dateAvailable' ? 'updatedDateAvailable' : name, fieldValue, {
-      originalDate: new Date(originalData.dateAvailable),
-    });
+
+    const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+
+    const error = await validateField(name === 'dateAvailable' ? 'updatedDateAvailable' : name, fieldValue, { lang, originalDate: new Date(originalData.dateAvailable) });
     setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
@@ -187,11 +190,11 @@ const EditFlat: React.FC = () => {
 
   return (
     <div className={styles.editFlat}>
-      <h2>Edit Flat</h2>
+      <h2>{t('editFlatTitle')}</h2>
       <Form method="post" action="." className={styles.form} encType="multipart/form-data" onSubmit={() => setIsSubmitting(true)}>
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="adTitle">Ad Title:</label>
+            <label htmlFor="adTitle">{t('adTitle')}</label>
             <input id="adTitle" name="adTitle" type="text" value={formData.adTitle || ''} minLength={5} maxLength={60} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.adTitle && <p className={styles.error}>{fieldErrors.adTitle}</p>}
@@ -199,7 +202,7 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="city">City:</label>
+            <label htmlFor="city">{t('city')}</label>
             <input id="city" name="city" type="text" value={formData.city || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.city && <p className={styles.error}>{fieldErrors.city}</p>}
@@ -207,7 +210,7 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="streetName">Street Name:</label>
+            <label htmlFor="streetName">{t('streetName')}</label>
             <input id="streetName" name="streetName" type="text" value={formData.streetName || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.streetName && <p className={styles.error}>{fieldErrors.streetName}</p>}
@@ -215,7 +218,7 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="streetNumber">Street Number:</label>
+            <label htmlFor="streetNumber">{t('streetNumber')}</label>
             <input id="streetNumber" name="streetNumber" type="text" value={formData.streetNumber || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.streetNumber && <p className={styles.error}>{fieldErrors.streetNumber}</p>}
@@ -223,7 +226,7 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="areaSize">Area Size (m²):</label>
+            <label htmlFor="areaSize">{t('areaSize')} (m²):</label>
             <input id="areaSize" name="areaSize" type="number" value={formData.areaSize || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.areaSize && <p className={styles.error}>{fieldErrors.areaSize}</p>}
@@ -231,7 +234,7 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="yearBuilt">Year Built:</label>
+            <label htmlFor="yearBuilt">{t('yearBuilt')}</label>
             <input id="yearBuilt" name="yearBuilt" type="number" value={formData.yearBuilt || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.yearBuilt && <p className={styles.error}>{fieldErrors.yearBuilt}</p>}
@@ -239,7 +242,7 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="rentPrice">Rent Price (€):</label>
+            <label htmlFor="rentPrice">{t('rentPrice')} (€):</label>
             <input id="rentPrice" name="rentPrice" type="number" value={formData.rentPrice || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.rentPrice && <p className={styles.error}>{fieldErrors.rentPrice}</p>}
@@ -247,7 +250,7 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="dateAvailable">Date Available:</label>
+            <label htmlFor="dateAvailable">{t('dateAvailable')}</label>
             <input id="dateAvailable" name="dateAvailable" type="date" value={formData.dateAvailable || ''} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.dateAvailable && <p className={styles.error}>{fieldErrors.dateAvailable}</p>}
@@ -255,25 +258,25 @@ const EditFlat: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={`${styles.inputContainer} ${styles.inputContainerCheckbox}`}>
-            <label htmlFor="hasAC">Has AC:</label>
+            <label htmlFor="hasAC">{t('hasAC')}</label>
             <input id="hasAC" name="hasAC" type="checkbox" checked={formData.hasAC || false} onChange={handleChange} />
           </div>
         </div>
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="image">Flat Image:</label>
+            <label htmlFor="image">{t('flatImage')}</label>
             <input id="image" name="image" type="file" accept="image/*" onChange={handleChange} />
           </div>
           {formData.image && typeof formData.image === 'string' && (
             <div className={styles.imagePreview}>
-              <p>Current Image:</p>
+              <p>{t('currentImage')}</p>
               <img src={formData.image} alt="Current Flat" style={{ width: '200px' }} />
             </div>
           )}
           {formData.image && typeof formData.image === 'object' && (
             <div className={styles.imagePreview}>
-              <p>New Image Preview:</p>
+              <p>{t('newImagePreview')}</p>
               <img src={URL.createObjectURL(formData.image)} alt="New Flat" style={{ width: '200px' }} />
             </div>
           )}
@@ -286,12 +289,12 @@ const EditFlat: React.FC = () => {
 
         {/* Submit button */}
         <button type="submit" className={styles.saveButton} disabled={isSubmitting || !isFormValid()}>
-          {isSubmitting ? 'Saving...' : 'Save'}
+          {isSubmitting ? t('saving') : t('save')}
         </button>
 
         {/* Back button */}
         <button type="button" className={styles.backButton} onClick={() => navigate('/myFlats')}>
-          Back
+          {t('back')}
         </button>
       </Form>
     </div>

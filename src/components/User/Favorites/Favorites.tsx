@@ -6,6 +6,7 @@ import { IoMdHeart } from 'react-icons/io';
 import { FaSearchPlus } from 'react-icons/fa';
 import ImageHoverPreview from '../../Shared/ImageHoverPreview/ImageHoverPreview';
 import { useImageHover } from '../../../utils/useImageHover';
+import { useTranslate } from '../../../i18n/useTranslate';
 import styles from './Favorites.module.css';
 
 // Loader function to fetch the user's favorite flats
@@ -41,9 +42,10 @@ export const favoritesLoader = async () => {
 };
 
 const Favorites: React.FC = () => {
+  const t = useTranslate();
   const { favorites } = useLoaderData() as { favorites: any[] };
   const navigate = useNavigate();
-    const { previewImage, hoverPosition, onMouseEnter, onMouseLeave, onMouseMove, previewSize } = useImageHover();
+  const { previewImage, hoverPosition, onMouseEnter, onMouseLeave, onMouseMove, previewSize } = useImageHover();
 
   // Handle the removal of a flat from user's favorites
   const handleRemoveFavorite = async (flatId: string) => {
@@ -62,11 +64,11 @@ const Favorites: React.FC = () => {
 
   return (
     <div className={styles.favorites}>
-      <h2>Your Favorite Flats</h2>
+      <h2>{t('favoritesTitle')}</h2>
 
       {/* If no favorites, show fallback message */}
       {favorites.length === 0 ? (
-        <p className={styles.noResults}>You have no favorite flats.</p>
+        <p className={styles.noResults}>{t('noFavorites')}</p>
       ) : (
         <div className={styles.gridContainer}>
           {favorites.map((flat) => (
@@ -75,38 +77,38 @@ const Favorites: React.FC = () => {
               <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
                 <img src={flat.image} alt={flat.adTitle} />
                 {/* Zoom icon shown on hover */}
-                <FaSearchPlus className={styles.zoomIcon} title="Preview Image" onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
+                <FaSearchPlus className={styles.zoomIcon} title={t('previewImage')} onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
               </div>
 
               {/* Flat details */}
               <div className={styles.flatDetails}>
                 <h3>{flat.adTitle}</h3>
                 <p>
-                  <strong>City:</strong> {flat.city}
+                  <strong>{t('city')}</strong> {flat.city}
                 </p>
                 <p>
-                  <strong>Street name:</strong> {flat.streetName}
+                  <strong>{t('streetName')}</strong> {flat.streetName}
                 </p>
                 <p>
-                  <strong>Street number:</strong> {flat.streetNumber}
+                  <strong>{t('streetNumber')}</strong> {flat.streetNumber}
                 </p>
                 <p>
-                  <strong>Area size:</strong> {flat.areaSize} m²
+                  <strong>{t('areaSize')}:</strong> {flat.areaSize} m²
                 </p>
                 <p>
-                  <strong>Has AC:</strong> {flat.hasAC ? 'Yes' : 'No'}
+                  <strong>{t('hasAC')}</strong> {flat.hasAC ? t('yes') : t('no')}
                 </p>
                 <p>
-                  <strong>Year built:</strong> {flat.yearBuilt}
+                  <strong>{t('yearBuilt')}</strong> {flat.yearBuilt}
                 </p>
                 <p>
-                  <strong>Rent price:</strong> {flat.rentPrice} €/month
+                  <strong>{t('rentPrice')}</strong> {flat.rentPrice} {t('euroPerMonth')}
                 </p>
                 <p>
-                  <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
+                  <strong>{t('dateAvailable')}</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
                 </p>
                 {/* Remove from favorites button */}
-                <IoMdHeart className={styles.removeFavorite} onClick={() => handleRemoveFavorite(flat.id)} title="Remove from Favorites" />
+                <IoMdHeart className={styles.removeFavorite} onClick={() => handleRemoveFavorite(flat.id)} title={t('removeFavorite')} />
               </div>
             </div>
           ))}

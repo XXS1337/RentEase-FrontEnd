@@ -6,6 +6,7 @@ import handleRemoveUser from '../../../../utils/handleRemoveUser';
 import Modal from '../../../Shared/Modal/Modal';
 import styles from './AllUsers.module.css';
 import { useAuth } from '../../../../context/AuthContext';
+import { useTranslate } from '../../../../i18n/useTranslate';
 
 // Extended user type with extra fields used in UI
 interface AugmentedUser {
@@ -41,6 +42,7 @@ export const allUsersLoader = async () => {
 };
 
 const AllUsers: React.FC = () => {
+  const t = useTranslate();
   const { users: initialUsers } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
   const { user: currentUser, setUser } = useAuth();
@@ -158,7 +160,7 @@ const AllUsers: React.FC = () => {
   // Show confirmation modal for user deletion
   const confirmDeleteUser = (userId: string) => {
     setDeleteTargetId(userId);
-    setShowModal({ isVisible: true, message: 'Are you sure you want to delete this user?' });
+    setShowModal({ isVisible: true, message: t('confirmDeleteUser') });
   };
 
   // Execute user deletion
@@ -186,48 +188,48 @@ const AllUsers: React.FC = () => {
 
   return (
     <div className={styles.allUsers}>
-      <h2>All Registered Users</h2>
+      <h2>{t('allUsersTitle')}</h2>
 
       {/* Filter Section */}
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          <label>User Type:</label>
+          <label>{t('userType')}:</label>
           <select name="userType" value={pendingFilters.userType} onChange={handleFilterChange}>
-            <option value="">All</option>
-            <option value="admin">Admin</option>
-            <option value="regular">Regular</option>
+            <option value="">{t('all')}</option>
+            <option value="admin">{t('admin')}</option>
+            <option value="regular">{t('regular')}</option>
           </select>
         </div>
         <div className={styles.filterGroup}>
-          <label>Age Range:</label>
-          <input name="minAge" type="number" value={pendingFilters.minAge} onChange={handleFilterChange} placeholder="Min" />
-          <input name="maxAge" type="number" value={pendingFilters.maxAge} onChange={handleFilterChange} placeholder="Max" />
+          <label>{t('ageRange')}</label>
+          <input name="minAge" type="number" value={pendingFilters.minAge} onChange={handleFilterChange} placeholder={t('min')} />
+          <input name="maxAge" type="number" value={pendingFilters.maxAge} onChange={handleFilterChange} placeholder={t('max')} />
         </div>
         <div className={styles.filterGroup}>
-          <label>Flats Count:</label>
-          <input name="minFlats" type="number" value={pendingFilters.minFlats} onChange={handleFilterChange} placeholder="Min" />
-          <input name="maxFlats" type="number" value={pendingFilters.maxFlats} onChange={handleFilterChange} placeholder="Max" />
+          <label>{t('flatsCount')}:</label>
+          <input name="minFlats" type="number" value={pendingFilters.minFlats} onChange={handleFilterChange} placeholder={t('min')} />
+          <input name="maxFlats" type="number" value={pendingFilters.maxFlats} onChange={handleFilterChange} placeholder={t('max')} />
         </div>
         <button onClick={applyFilters} className={styles.applyButton}>
-          Apply Filters
+          {t('applyFilters')}
         </button>
         <button onClick={resetFilters} className={styles.resetButton}>
-          Reset Filters
+          {t('resetFilters')}
         </button>
       </div>
 
       {/* Sort Section */}
       <div className={styles.sort}>
         <div className={styles.sortContainer}>
-          <label>Sort By:</label>
+          <label>{t('sortBy')}</label>
           <select value={sortOption} onChange={handleSortChange}>
-            <option value="">None</option>
-            <option value="firstName">First Name (A-Z)</option>
-            <option value="-firstName">First Name (Z-A)</option>
-            <option value="lastName">Last Name (A-Z)</option>
-            <option value="-lastName">Last Name (Z-A)</option>
-            <option value="publishedFlatsCount">Flats Count (Ascending)</option>
-            <option value="-publishedFlatsCount">Flats Count (Descending)</option>
+            <option value="">{t('none')}</option>
+            <option value="firstName">{t('firstNameAZ')}</option>
+            <option value="-firstName">{t('firstNameZA')}</option>
+            <option value="lastName">{t('lastNameAZ')}</option>
+            <option value="-lastName">{t('lastNameZA')}</option>
+            <option value="publishedFlatsCount">{t('flatsAsc')}</option>
+            <option value="-publishedFlatsCount">{t('flatsDesc')}</option>
           </select>
         </div>
       </div>
@@ -236,20 +238,20 @@ const AllUsers: React.FC = () => {
       <table className={styles.userTable}>
         <thead>
           <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Date of Birth</th>
-            <th>Age</th>
-            <th>Flats Count</th>
-            <th>Is Admin</th>
-            <th>Actions</th>
+            <th>{t('firstName')}</th>
+            <th>{t('lastName')}</th>
+            <th>{t('email')}</th>
+            <th>{t('birthDate')}</th>
+            <th>{t('age')}</th>
+            <th>{t('flatsCount')}</th>
+            <th>{t('isAdmin')}</th>
+            <th>{t('actions')}</th>
           </tr>
         </thead>
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <td colSpan={8}>No users match the criteria.</td>
+              <td colSpan={8}>{t('noUsersFound')}</td>
             </tr>
           ) : (
             users.map((user) => (
@@ -260,7 +262,7 @@ const AllUsers: React.FC = () => {
                 <td>{user.birthDate ? new Date(user.birthDate).toLocaleDateString('en-US') : 'N/A'}</td>
                 <td>{user.age}</td>
                 <td>{user.publishedFlatsCount}</td>
-                <td>{user.role === 'admin' ? 'Yes' : 'No'}</td>
+                <td>{user.role === 'admin' ? t('yes') : t('no')}</td>
                 <td>
                   {/* Edit button redirects to self or admin edit page */}
                   <button
@@ -269,14 +271,14 @@ const AllUsers: React.FC = () => {
                       else navigate(`/admin/edit-user/${user.id}`);
                     }}
                   >
-                    Edit
+                    {t('edit')}
                   </button>
                   {/* Toggle admin status */}
                   <button onClick={() => handleAdminToggle(user.id, user.role === 'admin')} disabled={updatingUserId === user.id}>
-                    {updatingUserId === user.id ? 'Updating...' : user.role === 'admin' ? 'Remove Admin' : 'Grant Admin'}
+                    {updatingUserId === user.id ? t('updating') : user.role === 'admin' ? t('removeAdmin') : t('grantAdmin')}
                   </button>
                   {/* Trigger delete confirmation */}
-                  <button onClick={() => confirmDeleteUser(user.id)}>Delete</button>
+                  <button onClick={() => confirmDeleteUser(user.id)}>{t('delete')}</button>
                 </td>
               </tr>
             ))
@@ -285,7 +287,7 @@ const AllUsers: React.FC = () => {
       </table>
 
       {/* Modal for confirming user deletion */}
-      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={cancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
+      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteUser} onNo={cancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? t('deleting') : t('yes')} />}
     </div>
   );
 };

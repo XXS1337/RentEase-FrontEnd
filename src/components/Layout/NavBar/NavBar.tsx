@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
+import { useTranslate } from '../../../i18n/useTranslate';
+import roFlag from '../../../assets/flags/ro.svg';
+import usFlag from '../../../assets/flags/us.svg';
 import Modal from '../../Shared/Modal/Modal';
 import styles from './NavBar.module.css';
 import my_logo from './../../../assets/logo/logo-no-background.png';
@@ -18,7 +22,10 @@ const NavBar: React.FC = () => {
   const { user, logout } = useAuth(); // Access current user and logout function from auth context
   const [showModal, setShowModal] = useState<ShowModalState>({ isVisible: false, message: '' });
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Toggle state for mobile menu
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme(); // Access theme and toggle function
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false); // State to control whether the language dropdown menu is open or not
+  const { language, toggleLanguage } = useLanguage(); // Access language state and toggle function
+  const t = useTranslate(); // Translation hook
 
   // Function to close menu
   const closeMenu = () => {
@@ -27,7 +34,7 @@ const NavBar: React.FC = () => {
 
   // Trigger logout confirmation modal
   const logOut = () => {
-    setShowModal({ isVisible: true, message: 'Are you sure you want to log out?' });
+    setShowModal({ isVisible: true, message: t('confirmLogout') });
     closeMenu();
   };
 
@@ -42,6 +49,17 @@ const NavBar: React.FC = () => {
     setShowModal({ isVisible: false, message: '' });
   };
 
+  // Toggle the language dropdown menu open/closed
+  const toggleLangMenu = () => {
+    setIsLangMenuOpen((prev) => !prev);
+  };
+
+  // Handle language selection: only toggle if it's a different language
+  const handleSelectLang = (lang: 'en' | 'ro') => {
+    if (language !== lang) toggleLanguage(); // Call context toggle function to change language
+    setIsLangMenuOpen(false); // Always close the dropdown after selection
+  };
+
   return (
     <div className={styles.navbar}>
       <div className={styles.navbarContainer}>
@@ -54,14 +72,51 @@ const NavBar: React.FC = () => {
           </div>
 
           <div className={styles.navbarLeftSideGreetingTheme}>
+            {/* Greeting, theme and language toggle */}
             <div className={styles.userGreeting}>
-              Hello, {user ? `${user.firstName} ${user.lastName}` : 'Guest'}
-              {user?.role === 'admin' && ' (Admin)'}!
+              {t('greeting')}, {user ? `${user.firstName} ${user.lastName}` : t('guest')}
+              {user?.role === 'admin' && ` (${t('admin')})`}!
             </div>
 
-            <button onClick={toggleTheme} className={styles.themeToggle} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+            {/* Theme toggle button */}
+            <button
+              onClick={toggleTheme}
+              className={styles.themeToggle}
+              title={
+                theme === 'dark'
+                  ? t('themeToggleLight') // e.g. 'Switch to Light Mode'
+                  : t('themeToggleDark') // e.g. 'Switch to Dark Mode'
+              }
+            >
               {theme === 'dark' ? <MdLightMode className={styles.sunIcon} /> : <MdDarkMode className={styles.moonIcon} />}
             </button>
+
+            {/* Language toggle */}
+            <div className={styles.languageDropdown}>
+              <button className={styles.languageToggle} onClick={toggleLangMenu}>
+                <span className={styles.languageOption}>
+                  <img src={language === 'en' ? usFlag : roFlag} alt="flag" className={styles.flagIcon} />
+                  {language === 'en' ? 'US' : 'RO'}
+                </span>
+              </button>
+
+              {isLangMenuOpen && (
+                <div className={styles.languageMenu}>
+                  <button onClick={() => handleSelectLang('en')}>
+                    <span className={styles.languageOption}>
+                      <img src={usFlag} alt="US flag" className={styles.flagIcon} />
+                      US
+                    </span>
+                  </button>
+                  <button onClick={() => handleSelectLang('ro')}>
+                    <span className={styles.languageOption}>
+                      <img src={roFlag} alt="RO flag" className={styles.flagIcon} />
+                      RO
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -73,36 +128,36 @@ const NavBar: React.FC = () => {
           {!user ? (
             <>
               <NavLink to="/login" className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                Login
+                {t('login')}
               </NavLink>
               <NavLink to="/forgot-password" className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                Forgot Password
+                {t('forgotPassword')}
               </NavLink>
               <NavLink to="/register" className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                Register
+                {t('register')}
               </NavLink>
             </>
           ) : (
             <>
               <NavLink to="/myFlats" className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                My Flats
+                {t('myFlats')}
               </NavLink>
               <NavLink to="/favorites" className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                Favorites
+                {t('favorites')}
               </NavLink>
               <NavLink to="/flats/new" className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                New Flat
+                {t('newFlat')}
               </NavLink>
               <NavLink to={`/profile`} className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                My Profile
+                {t('myProfile')}
               </NavLink>
               {user?.role === 'admin' && (
                 <NavLink to="/admin/all-users" className={({ isActive }) => (isActive ? styles.active : '')} onClick={closeMenu}>
-                  All Users
+                  {t('allUsers')}
                 </NavLink>
               )}
               <button onClick={logOut} className={styles.logoutButton}>
-                Logout
+                {t('logout')}
               </button>
             </>
           )}

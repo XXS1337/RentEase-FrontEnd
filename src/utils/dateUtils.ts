@@ -39,3 +39,9 @@ export const getOneYearFromToday = (today: Date): Date => {
 
   return oneYearFromToday; // Return the calculated date
 };
+
+export const getOneYearFromTodayUTC = (today: Date): number => {
+  const oneYear = new Date(Date.UTC(today.getUTCFullYear() + 1, today.getUTCMonth(), today.getUTCDate()));
+  oneYear.setUTCDate(oneYear.getUTCDate() - 1); // Subtract 1 day from UTC
+  return oneYear.getTime(); // return UTC timestamp
+};

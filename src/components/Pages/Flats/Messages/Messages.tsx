@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import axios from './../../../../api/axiosConfig';
 import { validateField } from '../../../../utils/validateField';
 import type Message from '../../../../types/Message';
+import { useTranslate } from '../../../../i18n/useTranslate';
 import styles from './Messages.module.css';
 
 // Type for the current logged-in user
@@ -124,6 +125,7 @@ export const messagesAction = async ({ request, params }: ActionFunctionArgs): P
 };
 
 const Messages: React.FC = () => {
+  const t = useTranslate();
   const { flatID } = useOutletContext<ContextData>();
   const { messages: initialMessages, isOwner, userCanMessage } = useLoaderData() as LoaderData;
   const actionData = useActionData<ActionData>();
@@ -177,7 +179,8 @@ const Messages: React.FC = () => {
     const value = e.target.value;
     setNewMessage(value);
     if (value.trim()) {
-      const error = await validateField('messageContent', value);
+      const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+      const error = await validateField('messageContent', value, { lang });
       setError(error);
     } else {
       setError('');
@@ -186,13 +189,14 @@ const Messages: React.FC = () => {
 
   // Validate field on blur
   const handleBlur = async () => {
-    const error = await validateField('messageContent', newMessage);
+    const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+    const error = await validateField('messageContent', newMessage, { lang });
     setError(error);
   };
 
   return (
     <div className={styles.messages}>
-      <h3>Messages</h3>
+      <h3>{t('messagesTitle')}</h3>
 
       {/* Display message list */}
       <div className={styles.messageList}>
@@ -200,18 +204,18 @@ const Messages: React.FC = () => {
           messages.map((msg) => (
             <div key={msg.id} className={styles.message}>
               <p>
-                <strong>From:</strong> {msg.senderName} ({msg.senderEmail})
+                <strong>{t('from')}</strong> {msg.senderName} ({msg.senderEmail})
               </p>
               <p>
-                <strong>Sent:</strong> {msg.creationTime}
+                <strong>{t('sent')}</strong> {msg.creationTime}
               </p>
               <p>
-                <strong>Message:</strong> {msg.content}
+                <strong>{t('message')}</strong> {msg.content}
               </p>
             </div>
           ))
         ) : (
-          <p>No messages to display.</p>
+          <p>{t('noMessages')}</p>
         )}
       </div>
 
@@ -222,7 +226,7 @@ const Messages: React.FC = () => {
           onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault();
             if (!newMessage.trim()) {
-              setError('Message content can’t be an empty string.');
+              setError(t('messageEmpty'));
               return;
             }
             const formData = new FormData(e.currentTarget);
@@ -230,10 +234,10 @@ const Messages: React.FC = () => {
           }}
           className={styles.newMessage}
         >
-          <textarea name="messageContent" placeholder="Write your message here..." maxLength={1000} value={newMessage} onChange={handleInputChange} onBlur={handleBlur} className={error ? styles.errorInput : ''} />
+          <textarea name="messageContent" placeholder={t('messagePlaceholder')} maxLength={1000} value={newMessage} onChange={handleInputChange} onBlur={handleBlur} className={error ? styles.errorInput : ''} />
           {error && <p className={styles.error}>{error}</p>}
           <button type="submit" disabled={!newMessage.trim()}>
-            Send Message
+            {t('sendMessage')}
           </button>
         </Form>
       )}

@@ -4,9 +4,10 @@ import Cookies from 'js-cookie';
 import axios from './../../../../api/axiosConfig';
 import { BsFillEnvelopeFill, BsFillEnvelopeSlashFill } from 'react-icons/bs';
 import { FaHome, FaEdit } from 'react-icons/fa';
-import styles from './ViewFlat.module.css';
 import Spinner from '../../../Shared/Spinner/Spinner';
 import type { LoaderFunctionArgs } from 'react-router-dom';
+import { useTranslate } from '../../../../i18n/useTranslate';
+import styles from './ViewFlat.module.css';
 
 // Loader function to fetch flat details based on flatID
 export const viewFlatLoader = async ({ params }: LoaderFunctionArgs) => {
@@ -42,6 +43,7 @@ export const viewFlatLoader = async ({ params }: LoaderFunctionArgs) => {
 };
 
 const ViewFlat: React.FC = () => {
+  const t = useTranslate();
   const flatData = useLoaderData() as any;
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,43 +102,43 @@ const ViewFlat: React.FC = () => {
           </div>
           <div className={styles.detailsContainer}>
             <p>
-              <strong>City:</strong> {city}
+              <strong>{t('city')}</strong> {city}
             </p>
             <p>
-              <strong>Street Name:</strong> {streetName}
+              <strong>{t('streetName')}</strong> {streetName}
             </p>
             <p>
-              <strong>Street Number:</strong> {streetNumber}
+              <strong>{t('streetNumber')}</strong> {streetNumber}
             </p>
             <p>
-              <strong>Area Size:</strong> {areaSize} m²
+              <strong>{t('areaSize')}:</strong> {areaSize} m²
             </p>
             <p>
-              <strong>Has AC:</strong> {hasAC ? 'Yes' : 'No'}
+              <strong>{t('hasAC')}</strong> {hasAC ? t('yes') : t('no')}
             </p>
             <p>
-              <strong>Year Built:</strong> {yearBuilt}
+              <strong>{t('yearBuilt')}</strong> {yearBuilt}
             </p>
             <p>
-              <strong>Rent Price:</strong> {rentPrice} €/month
+              <strong>{t('rentPrice')}</strong> {rentPrice} €/month
             </p>
             <p>
-              <strong>Date Available:</strong> {new Date(dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
+              <strong>{t('dateAvailable')}</strong> {new Date(dateAvailable).toLocaleDateString('en-US')}
             </p>
 
             {/* Action icons */}
             <div className={styles.icons}>
               {/* Navigate to homepage */}
-              <FaHome className={styles.backToHomepage} title="Back to Homepage" onClick={() => navigate('/')} />
+              <FaHome className={styles.backToHomepage} title={t('backToHomepage')} onClick={() => navigate('/')} />
 
               {/* Toggle messages */}
               {showMessages ? (
-                <BsFillEnvelopeSlashFill className={`${styles.envelopeIcon} ${styles.active}`} title="Hide Messages" onClick={handleToggleMessages} />
+                <BsFillEnvelopeSlashFill className={`${styles.envelopeIcon} ${styles.active}`} title={t('hideMessages')} onClick={handleToggleMessages} />
               ) : (
-                <BsFillEnvelopeFill className={styles.envelopeIcon} title="Show Messages" onClick={handleToggleMessages} />
+                <BsFillEnvelopeFill className={styles.envelopeIcon} title={t('showMessages')} onClick={handleToggleMessages} />
               )}
               {/* Show edit button only if current user is flat owner */}
-              {userId === ownerID && <FaEdit className={styles.editFlat} title="Edit Flat" onClick={() => navigate(`/flats/edit/${id}`)} />}
+              {userId === ownerID && <FaEdit className={styles.editFlat} title={t('editFlat')} onClick={() => navigate(`/flats/edit/${id}`)} />}
             </div>
           </div>
         </div>

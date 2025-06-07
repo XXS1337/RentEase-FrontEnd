@@ -6,6 +6,7 @@ import handleRemoveUser from '../../../utils/handleRemoveUser';
 import Modal from '../../Shared/Modal/Modal';
 import { useAuth } from '../../../context/AuthContext';
 import { validateField } from '../../../utils/validateField';
+import { useTranslate } from '../../../i18n/useTranslate';
 import type User from '../../../types/User';
 import styles from './MyProfile.module.css';
 
@@ -50,6 +51,8 @@ export const myProfileAction = async ({ request }: { request: Request }) => {
 
   const formData = await request.formData();
 
+  const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+
   // Extract and normalize field values
   const rawData = {
     firstName: formData.get('firstName') as string,
@@ -62,10 +65,10 @@ export const myProfileAction = async ({ request }: { request: Request }) => {
 
   // Validate input fields
   const errors: FieldErrors = {};
-  errors.firstName = await validateField('firstName', rawData.firstName);
-  errors.lastName = await validateField('lastName', rawData.lastName);
-  errors.email = await validateField('email', rawData.email, { checkEmail: true });
-  errors.birthDate = await validateField('birthDate', rawData.birthDate);
+  errors.firstName = await validateField('firstName', rawData.firstName, { lang });
+  errors.lastName = await validateField('lastName', rawData.lastName, { lang });
+  errors.email = await validateField('email', rawData.email, { checkEmail: true, lang });
+  errors.birthDate = await validateField('birthDate', rawData.birthDate, { lang });
 
   const payload: Record<string, string> = {
     firstName: rawData.firstName,
@@ -78,8 +81,8 @@ export const myProfileAction = async ({ request }: { request: Request }) => {
   const isPasswordChanged = rawData.password.trim() !== '';
 
   if (isPasswordChanged) {
-    errors.password = await validateField('password', rawData.password);
-    errors.confirmPassword = await validateField('confirmPassword', rawData.confirmPassword, { password: rawData.password });
+    errors.password = await validateField('password', rawData.password, { lang });
+    errors.confirmPassword = await validateField('confirmPassword', rawData.confirmPassword, { password: rawData.password, lang });
     payload.newPassword = rawData.password;
   }
 
@@ -114,6 +117,8 @@ export const myProfileAction = async ({ request }: { request: Request }) => {
 
 const MyProfile: React.FC = () => {
   const { logout, setUser } = useAuth();
+  const t = useTranslate();
+  const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
   const userData = useLoaderData() as User;
   const actionData = useActionData() as { errors?: FieldErrors; success?: boolean; logout?: boolean } | undefined;
 
@@ -150,7 +155,7 @@ const MyProfile: React.FC = () => {
   // React to action result (update, logout, or errors)
   useEffect(() => {
     if (actionData?.success && !formData.password.trim()) {
-      alert('Profile updated successfully!');
+      alert(t('profileUpdateSuccess'));
       setUser({
         ...(userData as ExtendedUser),
         id: userData.id || (userData as ExtendedUser)._id!,
@@ -182,7 +187,7 @@ const MyProfile: React.FC = () => {
 
     if (name === 'email') {
       // 1 Validate email format
-      const formatError = await validateField('email', value);
+      const formatError = await validateField('email', value, { lang });
       if (formatError) {
         setFieldErrors((prev) => ({ ...prev, email: formatError }));
         return;
@@ -195,10 +200,10 @@ const MyProfile: React.FC = () => {
         if (value !== userData.email) {
           const res = await axios.post('/users/checkEmail', { email: value });
           const available = res.data?.available;
-          error = available ? '' : 'Email address not available.';
+          error = available ? '' : t('emailTaken');
         }
       } catch (err) {
-        error = 'Failed to check email availability. Please try again.';
+        error = t('emailCheckFailed');
       } finally {
         setIsCheckingEmail(false);
       }
@@ -206,6 +211,7 @@ const MyProfile: React.FC = () => {
       error = await validateField(name, value, {
         password: formData.password,
         allowEmptyPassword: true,
+        lang,
       });
     }
 
@@ -245,7 +251,7 @@ const MyProfile: React.FC = () => {
       logout();
     } catch (err) {
       console.error('Error deleting user:', err);
-      alert('Failed to remove user. Please try again later.');
+      alert(t('deleteUserError'));
       setIsDeleting(false);
     }
   };
@@ -257,34 +263,35 @@ const MyProfile: React.FC = () => {
 
   return (
     <div className={styles.profile}>
-      <h2 className={styles.profileTitle}>My Profile</h2>
+      <h2 className={styles.profileTitle}>{t('myProfile')}</h2>
 
       {/* Display current profile info */}
       <div className={styles.profileDetails}>
-        <h3>User Details</h3>
+        <h3>{t('userDetails')}</h3>
         <p>
-          <strong>First Name:</strong> {userData.firstName}
+          <strong>{t('firstNameLabel')}</strong> {userData.firstName}
         </p>
         <p>
-          <strong>Last Name:</strong> {userData.lastName}
+          <strong>{t('lastNameLabel')}</strong> {userData.lastName}
         </p>
         <p>
-          <strong>Email:</strong> {userData.email}
+          <strong>{t('emailLabel')}</strong> {userData.email}
         </p>
         <p>
-          <strong>Date of Birth:</strong> {new Date(userData.birthDate || '').toLocaleDateString('en-US')}
+          <strong>{t('birthDateLabel')}</strong> {new Date(userData.birthDate || '').toLocaleDateString('en-US')}
         </p>
         <p>
-          <strong>Registered at:</strong> {userData?.createdAt ? new Date(userData.createdAt).toLocaleString() : 'Not Available'}
+          <strong>{t('registeredAt')}</strong> {userData?.createdAt ? new Date(userData.createdAt).toLocaleString() : 'Not Available'}
         </p>
       </div>
 
       {/* Profile update form */}
-      <h3 className={styles.formTitle}>Update Profile</h3>
+      <h3 className={styles.formTitle}>{t('updateProfile')}</h3>
       <Form method="post" className={styles.form}>
+        <input type="hidden" name="lang" value={lang} />
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="firstName">First Name:</label>
+            <label htmlFor="firstName">{t('firstNameLabel')}</label>
             <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} onBlur={handleBlur} />
           </div>
           {fieldErrors.firstName && <p className={styles.error}>{fieldErrors.firstName}</p>}
@@ -292,7 +299,7 @@ const MyProfile: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="lastName">Last Name:</label>
+            <label htmlFor="lastName">{t('lastNameLabel')}</label>
             <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} onBlur={handleBlur} />
           </div>
           {fieldErrors.lastName && <p className={styles.error}>{fieldErrors.lastName}</p>}
@@ -300,16 +307,16 @@ const MyProfile: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="email">Email:</label>
+            <label htmlFor="email">{t('emailLabel')}</label>
             <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} />
           </div>
-          {isCheckingEmail && <p className={styles.duplicateEmail}>Checking email availability...</p>}
+          {isCheckingEmail && <p className={styles.duplicateEmail}>{t('checkingEmail')}</p>}
           {fieldErrors.email && <p className={styles.error}>{fieldErrors.email}</p>}
         </div>
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="birthDate">Date of Birth:</label>
+            <label htmlFor="birthDate">{t('birthDateLabel')}</label>
             <input type="date" id="birthDate" name="birthDate" value={formData.birthDate} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {fieldErrors.birthDate && <p className={styles.error}>{fieldErrors.birthDate}</p>}
@@ -317,7 +324,7 @@ const MyProfile: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="password">Password:</label>
+            <label htmlFor="password">{t('passwordLabel')}</label>
             <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} />
           </div>
           {fieldErrors.password && <p className={styles.error}>{fieldErrors.password}</p>}
@@ -325,7 +332,7 @@ const MyProfile: React.FC = () => {
 
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="confirmPassword">Confirm Password:</label>
+            <label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</label>
             <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} />
           </div>
           {fieldErrors.confirmPassword && <p className={styles.error}>{fieldErrors.confirmPassword}</p>}
@@ -333,17 +340,17 @@ const MyProfile: React.FC = () => {
 
         {/* Update button */}
         <button type="submit" className={styles.updateButton} disabled={!isFormValid()}>
-          Update
+          {t('update')}
         </button>
       </Form>
 
       {/* Delete Account button */}
-      <button className={styles.deleteButton} onClick={() => setShowModal({ isVisible: true, message: 'Are you sure you want to delete your account?' })}>
-        Delete Account
+      <button className={styles.deleteButton} onClick={() => setShowModal({ isVisible: true, message: t('confirmDelete') })}>
+        {t('deleteAccount')}
       </button>
 
       {/* Modal Confirmation */}
-      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteAccount} onNo={handleCancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? 'Deleting...' : 'Yes'} />}
+      {showModal.isVisible && <Modal message={showModal.message} onYes={handleDeleteAccount} onNo={handleCancelDelete} yesDisabled={isDeleting} yesText={isDeleting ? t('deleting') : t('yes')} />}
     </div>
   );
 };

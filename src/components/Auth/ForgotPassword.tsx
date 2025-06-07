@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, useActionData, useNavigation } from 'react-router-dom';
 import axios from '../../api/axiosConfig';
 import styles from './Auth.module.css';
+import { useTranslate } from '../../i18n/useTranslate'; // Import translation hook
 
 // Define the error structure for the forgot password form
 type ForgotPasswordErrors = Partial<Record<'email' | 'general', string>>;
@@ -13,7 +14,7 @@ export const forgotPasswordAction = async ({ request }: { request: Request }) =>
 
   const errors: ForgotPasswordErrors = {};
 
-   // If there are validation errors, return them to the component
+  // If there are validation errors, return them to the component
   if (Object.keys(errors).length > 0) return { errors };
 
   try {
@@ -31,6 +32,8 @@ export const forgotPasswordAction = async ({ request }: { request: Request }) =>
 };
 
 const ForgotPassword: React.FC = () => {
+  const t = useTranslate(); // Access translation function
+
   // Get response data from action (success, error messages, etc.)
   const actionData = useActionData() as { success?: boolean; message?: string; errors?: ForgotPasswordErrors };
   const navigation = useNavigation();
@@ -63,9 +66,9 @@ const ForgotPassword: React.FC = () => {
   // Local validation on blur event
   const handleBlur = () => {
     if (!email) {
-      setFieldErrors((prev) => ({ ...prev, email: 'Email is required' }));
+      setFieldErrors((prev) => ({ ...prev, email: t('emailRequired') }));
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFieldErrors((prev) => ({ ...prev, email: 'Email must be in a valid format' }));
+      setFieldErrors((prev) => ({ ...prev, email: t('invalidEmail') }));
     } else {
       setFieldErrors((prev) => ({ ...prev, email: undefined }));
     }
@@ -81,12 +84,12 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <div className={styles.auth}>
-      <h2>Forgot Password</h2>
+      <h2>{t('forgotPasswordTitle')}</h2>
       <Form method="post" className={styles.form}>
         <div className={styles.formGroup}>
           <div className={styles.inputContainer}>
-            <label htmlFor="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Enter your email" value={email} onChange={handleChange} onBlur={handleBlur} required />
+            <label htmlFor="email">{t('emailLabel')}</label>
+            <input type="email" id="email" name="email" placeholder={t('emailPlaceholder')} value={email} onChange={handleChange} onBlur={handleBlur} required />
           </div>
           {/* Display field-level error if present */}
           {fieldErrors.email && <p className={styles.error}>{fieldErrors.email}</p>}
@@ -94,11 +97,11 @@ const ForgotPassword: React.FC = () => {
 
         {/* Display server-side error or success message */}
         {generalError && <p className={styles.error}>{generalError}</p>}
-        {wasSubmitted && <p className={styles.success}>If this email is registered, a reset link has been sent.</p>}
+        {wasSubmitted && <p className={styles.success}>{t('resetLinkSent')}</p>}
 
         {/* Submit button is disabled during submission or if input is invalid */}
         <button type="submit" disabled={isSubmitting || !email || !!fieldErrors.email} className={styles.saveButton}>
-          {isSubmitting ? 'Sending...' : 'Send Reset Link'}
+          {isSubmitting ? t('sending') : t('sendResetLink')}
         </button>
       </Form>
     </div>

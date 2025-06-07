@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { translations } from '../i18n/translations';
 
 // Create a custom Axios instance with predefined configuration
 const api = axios.create({
@@ -30,7 +31,10 @@ api.interceptors.response.use(
       markSessionExpiredAlertAsShown(); // Mark the alert as shown to prevent duplicate alerts in this tab
 
       document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; // Remove the authentication token cookie
-      alert('Session expired. Please log in again.'); // Inform the user their session expired. Show the alert only once per session
+
+      const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+      const t = (key: string) => translations[lang][key] || key;
+      alert(t('sessionExpired')); // Inform the user their session expired. Show the alert only once per session
       window.location.href = '/login'; // Redirect the user to the login page
     }
 

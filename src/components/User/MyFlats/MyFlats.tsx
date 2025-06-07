@@ -6,6 +6,7 @@ import { FaRegTrashAlt, FaEdit } from 'react-icons/fa';
 import { FaSearchPlus } from 'react-icons/fa';
 import ImageHoverPreview from '../../Shared/ImageHoverPreview/ImageHoverPreview';
 import { useImageHover } from '../../../utils/useImageHover';
+import { useTranslate } from '../../../i18n/useTranslate';
 import styles from './MyFlats.module.css';
 
 // Loader to fetch the flats added by the currently logged-in user
@@ -34,6 +35,7 @@ export const myFlatsLoader = async () => {
 };
 
 const MyFlats: React.FC = () => {
+  const t = useTranslate();
   const { flats: initialFlats } = useLoaderData() as { flats: any[] };
   const navigate = useNavigate();
   const { previewImage, hoverPosition, onMouseEnter, onMouseLeave, onMouseMove, previewSize } = useImageHover();
@@ -59,17 +61,17 @@ const MyFlats: React.FC = () => {
   return (
     <div className={styles.myFlats}>
       <div className={styles.header}>
-        <h2>Manage Your Flats</h2>
+        <h2>{t('myFlatsTitle')}</h2>
 
         {/* New Flat button */}
         <button className={styles.newFlatButton} onClick={() => navigate('/flats/new')}>
-          Insert New Flat
+          {t('insertNewFlat')}
         </button>
       </div>
 
       {/* Display message if no flats exist */}
       {myFlats.length === 0 ? (
-        <p className={styles.noResults}>You have not published any flats.</p>
+        <p className={styles.noResults}>{t('noFlatsPublished')}</p>
       ) : (
         <div className={styles.gridContainer}>
           {myFlats.map((flat) => (
@@ -77,40 +79,40 @@ const MyFlats: React.FC = () => {
               <div className={styles.flatImage} onClick={() => navigate(`/flats/view/${flat.id}`)} style={{ cursor: 'pointer' }}>
                 <img src={flat.image} alt={flat.adTitle} />
                 {/* Zoom icon shown on hover */}
-                <FaSearchPlus className={styles.zoomIcon} title="Preview Image" onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
+                <FaSearchPlus className={styles.zoomIcon} title={t('previewImage')} onMouseEnter={(e) => onMouseEnter(e, flat.image)} onMouseLeave={onMouseLeave} onMouseMove={onMouseMove} onClick={(e) => e.stopPropagation()} />
               </div>
               <div className={styles.flatDetails}>
                 <h3>{flat.adTitle}</h3>
                 <p>
-                  <strong>City:</strong> {flat.city}
+                  <strong>{t('city')}</strong> {flat.city}
                 </p>
                 <p>
-                  <strong>Street name:</strong> {flat.streetName}
+                  <strong>{t('streetName')}</strong> {flat.streetName}
                 </p>
                 <p>
-                  <strong>Street number:</strong> {flat.streetNumber}
+                  <strong>{t('streetNumber')}</strong> {flat.streetNumber}
                 </p>
                 <p>
-                  <strong>Area size:</strong> {flat.areaSize} m²
+                  <strong>{t('areaSize')}:</strong> {flat.areaSize} m²
                 </p>
                 <p>
-                  <strong>Has AC:</strong> {flat.hasAC ? 'Yes' : 'No'}
+                  <strong>{t('hasAC')}</strong> {flat.hasAC ? t('yes') : t('no')}
                 </p>
                 <p>
-                  <strong>Year built:</strong> {flat.yearBuilt}
+                  <strong>{t('yearBuilt')}</strong> {flat.yearBuilt}
                 </p>
                 <p>
-                  <strong>Rent price:</strong> {flat.rentPrice} €/month
+                  <strong>{t('rentPrice')}</strong> {flat.rentPrice} {t('euroPerMonth')}
                 </p>
                 <p>
-                  <strong>Date available:</strong> {new Date(flat.dateAvailable).toLocaleDateString('ro-RO', { timeZone: 'UTC' })}
+                  <strong>{t('dateAvailable')}</strong> {new Date(flat.dateAvailable).toLocaleDateString('en-US')}
                 </p>
 
                 {/* Delete button */}
-                <FaRegTrashAlt className={styles.deleteFlat} onClick={() => handleDeleteFlat(flat.id)} title="Delete Flat" />
+                <FaRegTrashAlt className={styles.deleteFlat} onClick={() => handleDeleteFlat(flat.id)} title={t('deleteFlat')} />
 
                 {/* Edit button */}
-                <FaEdit className={styles.editFlat} onClick={() => navigate(`/flats/edit/${flat.id}`)} title="Edit Flat" />
+                <FaEdit className={styles.editFlat} onClick={() => navigate(`/flats/edit/${flat.id}`)} title={t('editFlat')} />
               </div>
             </div>
           ))}

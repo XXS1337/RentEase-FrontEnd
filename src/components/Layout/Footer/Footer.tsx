@@ -1,9 +1,12 @@
 import React from 'react';
-import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa'; // React Icons
+import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 import styles from './Footer.module.css';
+import { useTranslate } from '../../../i18n/useTranslate';
 
 // Footer component for displaying social media links and site information
 const Footer: React.FC = () => {
+  const t = useTranslate(); // Access translation function
+
   return (
     <div className={styles.footer}>
       <div className={styles.socialMedia}>
@@ -23,9 +26,11 @@ const Footer: React.FC = () => {
 
       {/* Footer Info */}
       <div className={styles.footerInfo}>
-        <p>&copy; {new Date().getFullYear()} Rent Ease Inc. All rights reserved.</p>
         <p>
-          Contact us: <a href="mailto:contact@rentease.com">contact@rentease.com</a>
+          &copy; {new Date().getFullYear()} Rent Ease Inc. {t('allRightsReserved')}
+        </p>
+        <p>
+          {t('contactUs')}: <a href="mailto:contact@rentease.com">contact@rentease.com</a>
         </p>
       </div>
     </div>
