@@ -28,14 +28,14 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     contactUs: 'Contact us',
 
     // Error Page
-    errorTitle: 'Oops! Something went wrong',
+    errorTitle: 'Oops! Something went wrong.',
     errorDescription: 'We couldn’t find the page you were looking for.',
     goHome: 'Go to Home page',
 
     // User pages
     forgotPasswordTitle: 'Forgot Password',
-    emailRequired: 'Email is required',
-    invalidEmail: 'Email must be in a valid format',
+    emailRequired: 'Email is required.',
+    invalidEmail: 'Email must be in a valid format.',
     resetLinkSent: 'If this email is registered, a reset link has been sent.',
     sending: 'Sending...',
     sendResetLink: 'Send Reset Link',
@@ -231,14 +231,14 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     contactUs: 'Contactează-ne',
 
     // Error Page
-    errorTitle: 'Ups! Ceva n-a mers bine',
+    errorTitle: 'Ups! Ceva n-a mers bine.',
     errorDescription: 'Nu am găsit pagina pe care o cauți.',
     goHome: 'Mergi la pagina principală',
 
     // User pages
     forgotPasswordTitle: 'Parolă uitată',
-    emailRequired: 'Emailul este obligatoriu',
-    invalidEmail: 'Emailul trebuie să aibă un format valid',
+    emailRequired: 'Emailul este obligatoriu.',
+    invalidEmail: 'Emailul trebuie să aibă un format valid.',
     resetLinkSent: 'Dacă emailul există, un link de resetare a fost trimis.',
     sending: 'Se trimite...',
     sendResetLink: 'Trimite link de resetare',
@@ -346,7 +346,7 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     favoritesTitle: 'Apartamente favorite',
     noFavorites: 'Nu ai niciun apartament favorit.',
     removeFavorite: 'Șterge din favorite',
-    backToHomepage: 'Înapoi la pagina principală',
+    backToHomepage: 'Înapoi la Pagina principală',
     showMessages: 'Afișează mesaje',
     hideMessages: 'Ascunde mesaje',
     messagesTitle: 'Mesaje',
