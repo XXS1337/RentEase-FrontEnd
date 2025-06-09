@@ -81,7 +81,13 @@ const Login: React.FC = () => {
 
     if (actionData?.errors?.general) {
       // Show general error and reset form if credentials were wrong
-      setGeneralError(actionData.errors.general);
+
+      // Translate known server messages to localization keys for proper i18n
+      // This workaround exists because the backend currently sends raw strings (v1)
+      const errorKey = actionData.errors.general === 'Invalid email or password' ? 'invalidCredentials' : actionData.errors.general;
+
+      // Pass the key (or raw fallback) to the translation function
+      setGeneralError(t(errorKey));
 
       if (actionData.errors.general.toLowerCase().includes('invalid')) {
         setFormData({ email: '', password: '' });

@@ -120,7 +120,7 @@ const NewFlat: React.FC = () => {
   // Handle action response after submit
   useEffect(() => {
     if (actionData?.success && !formSubmitted) {
-      alert('Flat added successfully!');
+      alert(t('flatAddedSuccess'));
       setFormSubmitted(true);
       setIsSubmitting(false);
       navigate('/myFlats');

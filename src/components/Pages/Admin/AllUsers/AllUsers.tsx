@@ -174,7 +174,7 @@ const AllUsers: React.FC = () => {
       setShowModal({ isVisible: false, message: '' });
     } catch (err) {
       console.error('Error deleting user:', err);
-      alert('Failed to remove user. Please try again later.');
+      alert(t('userDeleteFailed'));
     } finally {
       setIsDeleting(false);
     }

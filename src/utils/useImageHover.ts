@@ -32,19 +32,44 @@ export function useImageHover() {
     setHoverPosition(null);
   };
 
-  // Called while mouse is moving over the zoom icon
+  // Called while the mouse is moving over the zoom icon
   const onMouseMove = (e: React.MouseEvent) => {
-    if (window.innerWidth < 850) return; // Ignore tracking for mobile screens
+    if (window.innerWidth < 850) return; // Skip preview on small/mobile screens
 
-    // Get the size of the preview to calculate position
     const { width, height } = previewSize;
+    const MARGIN = 12; // Distance between the preview box and screen edges
+    const BUFFER = 5; // Extra buffer to prevent 5px overflow at exact edge
 
-    // Calculate whether to show preview left/right and top/bottom based on space
-    const offsetX = e.clientX + width > window.innerWidth ? -width - 20 : 10;
-    const offsetY = e.clientY + height > window.innerHeight ? -height - 20 : 10;
+    // Start by positioning the preview to the bottom-right of the cursor
+    let x = e.clientX + MARGIN;
+    let y = e.clientY + MARGIN;
 
-    // Update preview position accordingly
-    setHoverPosition({ x: e.clientX + offsetX, y: e.clientY + offsetY });
+    // If the preview would overflow the right edge, try placing it to the left
+    if (x + width > window.innerWidth) {
+      x = e.clientX - width - MARGIN;
+
+      // If it still overflows left, clamp to max visible X
+      if (x < MARGIN) {
+        x = Math.max(window.innerWidth - width - MARGIN - BUFFER, MARGIN);
+      }
+    }
+
+    // If the preview would overflow the bottom edge, try placing it above
+    if (y + height > window.innerHeight) {
+      y = e.clientY - height - MARGIN;
+
+      // If it still overflows above, clamp to max visible Y
+      if (y < MARGIN) {
+        y = Math.max(window.innerHeight - height - MARGIN - BUFFER, MARGIN);
+      }
+    }
+
+    // Final safety clamp to avoid overflow by 1px on any edge
+    x = Math.max(MARGIN, Math.min(x, window.innerWidth - width - MARGIN - BUFFER));
+    y = Math.max(MARGIN, Math.min(y, window.innerHeight - height - MARGIN - BUFFER));
+
+    // Apply the computed safe position
+    setHoverPosition({ x, y });
   };
 
   // Listen for Escape key to close the preview

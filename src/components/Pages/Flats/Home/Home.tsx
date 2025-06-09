@@ -323,6 +323,7 @@ const Home: React.FC = () => {
                 {flat.favorite ? (
                   <IoMdHeart
                     className={styles.filledHeart}
+                    title={t('removeFavorite')}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -332,6 +333,7 @@ const Home: React.FC = () => {
                 ) : (
                   <IoMdHeartEmpty
                     className={styles.emptyHeart}
+                    title={t('addFavorite')}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();

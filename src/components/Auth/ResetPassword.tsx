@@ -64,25 +64,35 @@ const ResetPassword: React.FC = () => {
 
   useEffect(() => {
     if (actionData) {
+      // Disable the submit state once actionData is available
       setIsSubmitting(false);
+
+      // If password reset was successful, show success alert and redirect to login
       if (actionData.success) {
         alert(t('resetSuccess'));
-        window.location.href = '/login';
+        window.history.replaceState(null, '', '/'); // Clean current token URL from history
+        window.location.replace('/login'); // Redirect to login without adding history entry
       } else if (actionData.errors) {
-        setFieldErrors(actionData.errors);
-        // Auto-redirect if token is invalid/expired
-        if (actionData.errors.general?.toLowerCase().includes('token')) {
+        const newErrors: ResetPasswordErrors = { ...actionData.errors };
+
+        // Check if the error is related to an invalid or expired token
+        if (newErrors.general?.toLowerCase().includes('token')) {
+          // Replace raw backend message with translated version
+          newErrors.general = t('invalidOrExpiredToken');
+
+          // Start a countdown and redirect to Forgot Password page using replace (to prevent going back)
           setShowRedirectNotice(true);
           const interval = setInterval(() => {
             setCountdown((prev) => {
               if (prev === 1) {
                 clearInterval(interval);
-                window.location.href = '/forgot-password';
+                window.location.replace('/forgot-password'); // Prevents navigating back to this form
               }
               return prev - 1;
             });
           }, 1000);
         }
+        setFieldErrors(newErrors);
       }
     }
   }, [actionData]);

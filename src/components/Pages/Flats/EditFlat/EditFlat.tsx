@@ -101,7 +101,7 @@ export const editFlatAction = async ({ request, params }: ActionFunctionArgs) =>
       });
     }
 
-    return redirect('/myFlats');
+    return { success: true };
   } catch (error: any) {
     console.error('Error updating flat:', error);
     return {
@@ -137,7 +137,7 @@ const EditFlat: React.FC = () => {
   // Handle success or general error after form submission
   useEffect(() => {
     if (actionData?.success) {
-      alert('Flat updated successfully!');
+      alert(t('flatUpdatedSuccess'));
       setIsSubmitting(false);
       navigate('/myFlats');
     }

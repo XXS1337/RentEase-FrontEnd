@@ -3,6 +3,7 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
   en: {
     // Axios
     sessionExpired: 'Session expired. Please log in again.',
+    noConnection: 'You appear to be offline. Please check your internet connection.',
 
     // Navbar
     login: 'Login',
@@ -75,6 +76,10 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     deleteUser: 'Delete User',
     confirmDeleteUser: 'Are you sure you want to delete this user?',
     backToAllUsers: 'Back to All Users',
+    invalidCredentials: 'Invalid email or password',
+    userDeletedSuccess: 'User deleted successfully!',
+    invalidOrExpiredToken: 'Invalid or expired token.',
+    userDeleteFailed: 'Failed to remove user. Please try again later.',
 
     // All users
     allUsersTitle: 'All Registered Users',
@@ -142,6 +147,7 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     deleteFlat: 'Delete Flat',
     favoritesTitle: 'Your Favorite Flats',
     noFavorites: 'You have no favorite flats.',
+    addFavorite: 'Add to Favorites',
     removeFavorite: 'Remove from Favorites',
     backToHomepage: 'Back to Homepage',
     showMessages: 'Show Messages',
@@ -163,6 +169,8 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     back: 'Back',
     addNewFlatTitle: 'Add New Flat',
     imagePreview: 'Image Preview:',
+    flatAddedSuccess: 'Flat added successfully!',
+    flatUpdatedSuccess: 'Flat updated successfully!',
 
     // Chatbot
     chatPlaceholder: 'Ask me about flats...',
@@ -206,6 +214,7 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
   ro: {
     // Axios
     sessionExpired: 'Sesiunea a expirat. Te rugăm să te autentifici din nou.',
+    noConnection: 'Se pare că nu ești conectat la internet. Verifică conexiunea și încearcă din nou.',
 
     // Navbar
     login: 'Autentificare',
@@ -278,6 +287,10 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     deleteUser: 'Șterge utilizatorul',
     confirmDeleteUser: 'Sigur vrei să ștergi acest utilizator?',
     backToAllUsers: 'Înapoi la Toți utilizatorii',
+    invalidCredentials: 'Email sau parolă incorecte.',
+    userDeletedSuccess: 'Utilizatorul a fost șters cu succes!',
+    invalidOrExpiredToken: 'Token invalid sau expirat.',
+    userDeleteFailed: 'Ștergerea utilizatorului a eșuat. Vă rugăm să încercați din nou mai târziu.',
 
     // All users
     allUsersTitle: 'Toți utilizatorii înregistrați',
@@ -345,7 +358,8 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     deleteFlat: 'Șterge apt.',
     favoritesTitle: 'Apartamente favorite',
     noFavorites: 'Nu ai niciun apartament favorit.',
-    removeFavorite: 'Șterge din favorite',
+    addFavorite: 'Adaugă la Favorite',
+    removeFavorite: 'Șterge din Favorite',
     backToHomepage: 'Înapoi la Pagina principală',
     showMessages: 'Afișează mesaje',
     hideMessages: 'Ascunde mesaje',
@@ -366,6 +380,8 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     back: 'Înapoi',
     addNewFlatTitle: 'Adaugă apartament nou',
     imagePreview: 'Previzualizare imagine:',
+    flatAddedSuccess: 'Apartamentul a fost adăugat cu succes!',
+    flatUpdatedSuccess: 'Apartamentul a fost actualizat cu succes!',
 
     // Chatbot
     chatPlaceholder: 'Întreabă-mă despre apartamente...',

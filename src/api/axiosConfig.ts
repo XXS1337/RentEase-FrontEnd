@@ -23,6 +23,10 @@ api.interceptors.response.use(
     // Try to extract the error message from the response (if any)
     const message = error?.response?.data?.message;
 
+    // Translation helper using saved language from localStorage (defaults to English)
+    const lang = (localStorage.getItem('language') as 'en' | 'ro') || 'en';
+    const t = (key: string) => translations[lang][key] || key;
+
     // Define a list of known auth-related error conditions
     const isAuthExpired = error?.response?.status === 401 && (message === 'Token expired!' || message === 'Invalid token!' || message === 'User not found' || message === 'Token is not valid' || message === 'Session expired. Please login again');
 
@@ -36,6 +40,11 @@ api.interceptors.response.use(
       const t = (key: string) => translations[lang][key] || key;
       alert(t('sessionExpired')); // Inform the user their session expired. Show the alert only once per session
       window.location.href = '/login'; // Redirect the user to the login page
+    }
+
+    // No response from server (e.g. offline or server down)
+    if (!error.response) {
+      alert(t('noConnection') || 'You appear to be offline. Please check your internet connection.');
     }
 
     // Re-throw the error so it can be handled in the component if needed

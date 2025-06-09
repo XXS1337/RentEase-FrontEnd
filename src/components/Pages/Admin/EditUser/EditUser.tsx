@@ -223,11 +223,11 @@ const EditUser: React.FC = () => {
     setIsDeleting(true);
     try {
       await handleRemoveUser(userData.id);
-      alert(t('profileUpdateSuccess'));
+      alert(t('userDeletedSuccess'));
       navigate('/admin/all-users');
     } catch (err) {
       console.error('Error deleting user:', err);
-      alert('Failed to remove user. Please try again later.');
+      alert(t('userDeleteFailed'));
       setIsDeleting(false);
     }
   };
