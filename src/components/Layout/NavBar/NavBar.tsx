@@ -7,10 +7,10 @@ import { useTranslate } from '../../../i18n/useTranslate';
 import roFlag from '../../../assets/flags/ro.svg';
 import usFlag from '../../../assets/flags/us.svg';
 import Modal from '../../Shared/Modal/Modal';
-import styles from './NavBar.module.css';
 import my_logo from './../../../assets/logo/logo-no-background.png';
 import { GiHamburgerMenu } from 'react-icons/gi';
 import { MdDarkMode, MdLightMode } from 'react-icons/md';
+import styles from './NavBar.module.css';
 
 // State type for modal visibility and message
 type ShowModalState = {

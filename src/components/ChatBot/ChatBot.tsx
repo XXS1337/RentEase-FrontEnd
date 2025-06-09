@@ -41,12 +41,15 @@ const ChatBot: React.FC = () => {
     try {
       const res = await axios.post(
         '/ai/chatbot',
-        { prompt: userMessage.text },
+        {
+          prompt: userMessage.text,
+          lang: localStorage.getItem('language') || 'en',
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          withCredentials: true, // 🔥 Asta trimite cookie-urile spre backend
+          withCredentials: true,
         }
       );
 

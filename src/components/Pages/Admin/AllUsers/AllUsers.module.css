@@ -51,6 +51,20 @@
     outline: none;
 }
 
+.filterErrors {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+    background-color: var(--error-bg);
+    border-radius: 4px;
+    gap: 0.25rem;
+}
+
+.error {
+    color: var(--error-color);
+    font-size: 0.875rem;
+}
+
 .applyButton,
 .resetButton {
     padding: 0.75rem;
@@ -91,8 +105,9 @@
 }
 
 .sortContainer label {
-    width: 5rem;
     font-weight: bold;
+    width: fit-content;
+    white-space: nowrap;
 }
 
 .sortContainer select {
@@ -256,17 +271,35 @@
     }
 
     .userTable button:nth-of-type(2) {
-        width: fit-content;
+        width: 100%;
+    }
+
+    .userTable td:last-child {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        /* ✅ aliniere la stânga */
+        gap: 0.5rem;
     }
 
     .userTable button {
-        white-space: normal;
+        white-space: nowrap;
         word-break: break-word;
         overflow-wrap: break-word;
-        text-align: center;
+        text-align: left;
+        width: 100%;
     }
-
 }
+
+@media (max-width: 600px) {
+
+    .userTable td:last-child,
+    .userTable th:last-child {
+        min-width: 120px;
+    }
+}
+
+
 
 @media (max-width: 550px) {
     .allUsers {
@@ -332,11 +365,11 @@
         display: flex;
         flex-direction: column;
         margin-bottom: 1rem;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border-color);
         border-radius: 5px;
         padding: 1rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        background-color: #fff;
+        background-color: var(--card-bg);
         width: 100%;
     }
 
@@ -368,5 +401,6 @@
         word-break: none;
         width: 100%;
     }
+
 
 }

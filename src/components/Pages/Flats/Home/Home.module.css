@@ -51,10 +51,12 @@
 }
 
 .filterErrors {
-    border: 1px solid black;
     display: flex;
     flex-direction: column;
     margin-bottom: 1rem;
+    background-color: var(--error-bg);
+    border-radius: 4px;
+    gap: 0.25rem;
 }
 
 .error {
@@ -78,8 +80,9 @@
 }
 
 .sortContainer label {
-    width: 5rem;
     font-weight: bold;
+    width: fit-content;
+    white-space: nowrap;
 }
 
 .sortContainer select {
@@ -161,7 +164,6 @@
     width: 50%;
     position: relative;
     overflow: hidden;
-
 }
 
 .flatImage img {
@@ -172,7 +174,6 @@
 
 .flatDetails {
     width: 50%;
-    height: 100%;
     padding: 1rem;
     position: relative;
 }

@@ -113,6 +113,8 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     grantAdmin: 'Grant Admin',
     noUsersFound: 'No users match the criteria.',
     updating: 'Updating...',
+    ageError: 'Minimum age must be less than maximum age.',
+    flatsError: 'Minimum flat count must be less than maximum.',
 
     // Flats pages:
     availableFlats: 'Available Flats',
@@ -129,8 +131,8 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     rentPrice: 'Rent Price:',
     euroPerMonth: '€/month',
     dateAvailable: 'Date Available:',
-    priceError: 'Min price must be less than max price',
-    areaError: 'Min area must be less than max area',
+    priceError: 'Min price must be less than max price.',
+    areaError: 'Min area must be less than max area.',
     noFlats: 'No flats available.',
     noFlatsMatch: 'No flats match your search criteria.',
     cityAZ: 'City (A-Z)',
@@ -323,7 +325,9 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     removeAdmin: 'Retrage admin',
     grantAdmin: 'Acordă admin',
     noUsersFound: 'Niciun utilizator nu se potrivește criteriilor.',
-    updating: 'Se actualizează...',
+    updating: 'Actualizare...',
+    ageError: 'Vârsta minimă trebuie să fie mai mică decât cea maximă.',
+    flatsError: 'Numărul minim de apartamente trebuie să fie mai mic decât cel maxim.',
 
     // Flats pages:
     availableFlats: 'Apartamente disponibile',
@@ -340,8 +344,8 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     rentPrice: 'Chirie:',
     euroPerMonth: '€/lună',
     dateAvailable: 'Disponibil din:',
-    priceError: 'Prețul minim trebuie să fie mai mic decât cel maxim',
-    areaError: 'Suprafața minimă trebuie să fie mai mică decât cea maximă',
+    priceError: 'Prețul minim trebuie să fie mai mic decât cel maxim.',
+    areaError: 'Suprafața minimă trebuie să fie mai mică decât cea maximă.',
     noFlats: 'Nu există apartamente disponibile.',
     noFlatsMatch: 'Niciun apartament nu corespunde filtrului.',
     cityAZ: 'Oraș (A-Z)',

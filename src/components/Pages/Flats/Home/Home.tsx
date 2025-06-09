@@ -215,14 +215,18 @@ const Home: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        applyFilters();
+        // Only apply filters if there are no validation errors
+        if (Object.keys(validationErrors).length === 0) {
+          applyFilters();
+        }
       } else if (e.key === 'Escape') {
         resetFilters();
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [applyFilters, resetFilters]);
+  }, [applyFilters, resetFilters, validationErrors]);
 
   return (
     <div className={styles.home}>

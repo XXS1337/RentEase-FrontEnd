@@ -62,6 +62,7 @@ const AllUsers: React.FC = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{ age?: string; flats?: string }>({});
 
   // Fetch filtered and sorted users
   const fetchUsers = async (appliedFilters = filters, sort = sortOption) => {
@@ -119,14 +120,48 @@ const AllUsers: React.FC = () => {
   };
 
   // Keyboard shortcut: Enter to apply, Escape to reset
+  // Keyboard shortcut: Enter to apply, Escape to reset
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') applyFilters();
-      else if (e.key === 'Escape') resetFilters();
+      if (e.key === 'Enter') {
+        // Apply filters only if no validation errors
+        if (Object.keys(validationErrors).length === 0) {
+          applyFilters();
+        }
+      } else if (e.key === 'Escape') {
+        resetFilters();
+      }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pendingFilters]);
+  }, [applyFilters, resetFilters, validationErrors]);
+
+  // Validate filter values: ensure minAge < maxAge and minFlats < maxFlats
+  useEffect(() => {
+    const errors: typeof validationErrors = {};
+
+    // Convert age fields to numbers for comparison
+    const minAge = parseFloat(pendingFilters.minAge);
+    const maxAge = parseFloat(pendingFilters.maxAge);
+
+    // If both fields are filled and min is greater than max, trigger validation error
+    if (pendingFilters.minAge && pendingFilters.maxAge && minAge > maxAge) {
+      errors.age = t('ageError'); // Example: "Minimum age must be less than maximum"
+    }
+
+    // Convert flats count fields to numbers
+    const minFlats = parseFloat(pendingFilters.minFlats);
+    const maxFlats = parseFloat(pendingFilters.maxFlats);
+
+    // If both fields are filled and min is greater than max, trigger validation error
+    if (pendingFilters.minFlats && pendingFilters.maxFlats && minFlats > maxFlats) {
+      errors.flats = t('flatsError'); // Example: "Minimum flat count must be less than maximum"
+    }
+
+    // Save detected validation errors into state
+    setValidationErrors(errors);
+  }, [pendingFilters, t]);
 
   // Toggle admin role for a specific user
   const handleAdminToggle = async (userId: string, isAdmin: boolean) => {
@@ -210,13 +245,20 @@ const AllUsers: React.FC = () => {
           <input name="minFlats" type="number" value={pendingFilters.minFlats} onChange={handleFilterChange} placeholder={t('min')} />
           <input name="maxFlats" type="number" value={pendingFilters.maxFlats} onChange={handleFilterChange} placeholder={t('max')} />
         </div>
-        <button onClick={applyFilters} className={styles.applyButton}>
+        <button onClick={applyFilters} className={styles.applyButton} disabled={Object.keys(validationErrors).length > 0}>
           {t('applyFilters')}
         </button>
         <button onClick={resetFilters} className={styles.resetButton}>
           {t('resetFilters')}
         </button>
       </div>
+
+      {(validationErrors.age || validationErrors.flats) && (
+        <div className={styles.filterErrors}>
+          {validationErrors.age && <p className={styles.error}>{validationErrors.age}</p>}
+          {validationErrors.flats && <p className={styles.error}>{validationErrors.flats}</p>}
+        </div>
+      )}
 
       {/* Sort Section */}
       <div className={styles.sort}>

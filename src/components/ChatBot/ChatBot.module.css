@@ -23,6 +23,23 @@
     background: var(--page-bg);
 }
 
+
+.chatWindow ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.chatWindow li {
+    margin-bottom: 4px;
+}
+
+.chatWindow li a {
+    color: var(--link-color);
+    text-decoration: underline;
+    word-break: break-word;
+}
+
 .userMsg {
     background-color: var(--user-msg-bg);
     padding: 8px 12px;

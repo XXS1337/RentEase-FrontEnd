@@ -19,6 +19,7 @@
     --button-disabled: #AAAAAA;
     --button-disabled-hover: #888888;
     --button-text: #FFFFFF;
+    --error-bg: rgba(255, 0, 0, 0.05);
 
     /* All Users */
     --focus-blue: #007BFF;
@@ -30,8 +31,7 @@
     /* ChatBot */
     --user-msg-bg: #DCF8C6;
     --bot-msg-bg: #ECECEC;
-
-
+    --link-color: #0077cc;
 
     /* Shared Semantic Colors */
     --error-color: #FF0000;
@@ -65,6 +65,7 @@ body.dark {
     --button-red-hover: #D32F2F;
     --button-disabled: #777777;
     --button-disabled-hover: #555555;
+    --error-bg: rgba(255, 0, 0, 0.15);
 
     /* All Users */
     --focus-blue: #90CAF9;
@@ -76,6 +77,7 @@ body.dark {
     /* ChatBot */
     --user-msg-bg: #2E7D32;
     --bot-msg-bg: #424242;
+    --link-color: #66b2ff;
 
     /* Shared Semantic Colors */
     --error-color: #FF8A80;
