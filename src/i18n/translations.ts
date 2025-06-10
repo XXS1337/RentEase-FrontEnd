@@ -234,7 +234,7 @@ export const translations: Record<'en' | 'ro', Record<string, string>> = {
     languageToggle: 'Schimbă limba',
     greeting: 'Salut',
     guest: 'Vizitator',
-    admin: 'Admin.',
+    admin: 'Admin',
     confirmLogout: 'Sigur vrei să te deconectezi?',
 
     //Footer

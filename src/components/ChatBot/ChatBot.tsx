@@ -6,11 +6,11 @@ import { BsChatDots } from 'react-icons/bs';
 import { useTranslate } from '../../i18n/useTranslate';
 import styles from './ChatBot.module.css';
 
-// Define the exact type for sender values
+// Chat message type
 interface Message {
   sender: 'user' | 'bot';
   text: string;
-  links?: string[]; // optional list of links for bot messages
+  links?: string[];
 }
 
 const ChatBot: React.FC = () => {
@@ -22,12 +22,14 @@ const ChatBot: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Scrolls to bottom when a new message appears
   useEffect(() => {
     if (isOpen && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen]);
 
+  // Sends the message to the bot and appends both messages to UI
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -54,10 +56,7 @@ const ChatBot: React.FC = () => {
       );
 
       const botLinks = res.data?.links || [];
-      const botText =
-        botLinks.length > 0
-          ? '' // Don't display message text if we have links
-          : res.data?.message || t('chatUnknown');
+      const botText = botLinks.length > 0 ? '' : res.data?.message || t('chatUnknown');
 
       const botMessage: Message = { sender: 'bot', text: botText, links: botLinks };
       setMessages((prev) => [...prev, botMessage]);
@@ -69,20 +68,26 @@ const ChatBot: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    sendMessage();
+  // Handles Enter key for sending message
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevents form submission or newline
+      sendMessage();
+    }
   };
 
   return (
     <>
       {isOpen && (
         <div className={styles.chatBotWrapper}>
+          {/* Message list */}
           <div className={styles.chatWindow}>
             {messages.map((msg, index) => (
               <div key={index} className={msg.sender === 'user' ? styles.userMsg : styles.botMsg}>
-                {msg.text && msg.text.split('\n').map((line, i) => <p key={i}>{line}</p>)}
-                {msg.links && msg.links.length > 0 && (
+                {msg.text?.split('\n').map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
+                {msg.links && (
                   <ul>
                     {msg.links.map((link, i) => (
                       <li key={i}>
@@ -99,15 +104,23 @@ const ChatBot: React.FC = () => {
             <div ref={chatEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.inputArea}>
-            <input type="text" placeholder={t('chatPlaceholder')} value={input} onChange={(e) => setInput(e.target.value)} />
-            <button type="submit" disabled={loading || !input.trim()}>
+          {/* Input field and button */}
+          <div className={styles.inputArea}>
+            <input type="text" placeholder={t('chatPlaceholder')} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} autoComplete="off" />
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                sendMessage();
+              }}
+              disabled={loading || !input.trim()}
+            >
               {t('send')}
             </button>
-          </form>
+          </div>
         </div>
       )}
 
+      {/* Toggle button */}
       <button className={styles.toggleButton} onClick={() => setIsOpen((prev) => !prev)}>
         {isOpen ? <FaTimes size={24} /> : <BsChatDots size={24} />}
       </button>

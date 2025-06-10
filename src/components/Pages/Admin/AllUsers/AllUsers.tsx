@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type ChangeEvent } from 'react';
+import React, { useEffect, useState, useCallback, type ChangeEvent } from 'react';
 import { useLoaderData, useNavigate, redirect } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from '../../../../api/axiosConfig';
@@ -24,19 +24,22 @@ interface LoaderData {
   users: AugmentedUser[];
 }
 
-// Loader function to fetch all users
+// Loader function to fetch all users from backend with authorization
 export const allUsersLoader = async () => {
   const token = Cookies.get('token');
   if (!token) return redirect('/login');
 
   try {
+    // Fetch all users with Bearer token authorization header
     const { data: response } = await axios.get('/users/allUsers', {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    // Return users wrapped in LoaderData interface
     return { users: response.data } satisfies LoaderData;
   } catch (err) {
     console.error('Failed to load users:', err);
+    // On error redirect to home page
     return redirect('/');
   }
 };
@@ -47,7 +50,7 @@ const AllUsers: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser, setUser } = useAuth();
 
-  // State for user list, filters, sort options, modal, and actions
+  // States for user list, filters, sort options, modal, and actions
   const [users, setUsers] = useState<AugmentedUser[]>(initialUsers);
   const [filters, setFilters] = useState({
     userType: '',
@@ -64,67 +67,80 @@ const AllUsers: React.FC = () => {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{ age?: string; flats?: string }>({});
 
-  // Fetch filtered and sorted users
-  const fetchUsers = async (appliedFilters = filters, sort = sortOption) => {
+  // Function to fetch users with applied filters and sorting from backend
+  const fetchUsers = useCallback(async (appliedFilters: typeof filters, sort: string) => {
     const token = Cookies.get('token');
     const params: Record<string, string> = {};
 
-    // Apply role filter
-    if (appliedFilters.userType === 'admin') params.role = 'admin';
-    else if (appliedFilters.userType === 'regular') params.role = 'user';
+    // Map filter userType to role query parameter
+    if (appliedFilters.userType === 'admin') {
+      params.role = 'admin';
+    } else if (appliedFilters.userType === 'regular') {
+      params.role = 'user';
+    }
 
-    // Apply age and flats count range filters
-    if (appliedFilters.minAge || appliedFilters.maxAge) params.age = `${appliedFilters.minAge || 0}-${appliedFilters.maxAge || 120}`;
-    if (appliedFilters.minFlats || appliedFilters.maxFlats) params.flatsCount = `${appliedFilters.minFlats || 0}-${appliedFilters.maxFlats || 1000}`;
+    // Map age range filters to age query parameter
+    if (appliedFilters.minAge || appliedFilters.maxAge) {
+      params.age = `${appliedFilters.minAge || 0}-${appliedFilters.maxAge || 100}`;
+    }
 
-    if (sort) params.sort = sort;
+    // Map flats count range filters to flatsCount query parameter
+    if (appliedFilters.minFlats || appliedFilters.maxFlats) {
+      params.flatsCount = `${appliedFilters.minFlats || 0}-${appliedFilters.maxFlats || 100}`;
+    }
+
+    // Add sorting parameter if present
+    if (sort) {
+      params.sort = sort;
+    }
 
     try {
+      // Fetch filtered and sorted users from backend
       const { data } = await axios.get('/users/allUsers', {
         headers: { Authorization: `Bearer ${token}` },
         params,
       });
+
+      // Update users state with new data
       setUsers(data.data);
     } catch (err) {
       console.error('Error fetching users:', err);
     }
-  };
+  }, []);
 
-  // Refetch users when filters or sort change
+  // Effect triggers fetchUsers whenever filters or sorting change
   useEffect(() => {
     fetchUsers(filters, sortOption);
-  }, [filters, sortOption]);
+  }, [filters, sortOption, fetchUsers]);
 
-  // Update pending filter values
+  // Handle input/select changes for filter controls, updating pending filters state
   const handleFilterChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setPendingFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Update sort value
+  // Handle change in sort select input
   const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSortOption(e.target.value);
   };
 
-  // Apply filters from pending state
-  const applyFilters = () => {
+  // Apply filters from pendingFilters to filters state to trigger fetch
+  const applyFilters = useCallback(() => {
     setFilters(pendingFilters);
-  };
+  }, [pendingFilters]);
 
-  // Reset filters and sorting
-  const resetFilters = () => {
+  // Reset all filters and sorting to default empty states
+  const resetFilters = useCallback(() => {
     const empty = { userType: '', minAge: '', maxAge: '', minFlats: '', maxFlats: '' };
     setPendingFilters(empty);
     setFilters(empty);
     setSortOption('');
-  };
+  }, []);
 
-  // Keyboard shortcut: Enter to apply, Escape to reset
-  // Keyboard shortcut: Enter to apply, Escape to reset
+  // Keyboard shortcuts: Enter applies filters if no validation errors, Escape resets filters
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        // Apply filters only if no validation errors
         if (Object.keys(validationErrors).length === 0) {
           applyFilters();
         }
@@ -135,35 +151,33 @@ const AllUsers: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [applyFilters, resetFilters, validationErrors]);
+  }, [validationErrors, applyFilters, resetFilters]);
 
   // Validate filter values: ensure minAge < maxAge and minFlats < maxFlats
   useEffect(() => {
     const errors: typeof validationErrors = {};
 
-    // Convert age fields to numbers for comparison
     const minAge = parseFloat(pendingFilters.minAge);
     const maxAge = parseFloat(pendingFilters.maxAge);
 
-    // If both fields are filled and min is greater than max, trigger validation error
     if (pendingFilters.minAge && pendingFilters.maxAge && minAge > maxAge) {
-      errors.age = t('ageError'); // Example: "Minimum age must be less than maximum"
+      errors.age = t('ageError');
     }
 
-    // Convert flats count fields to numbers
     const minFlats = parseFloat(pendingFilters.minFlats);
     const maxFlats = parseFloat(pendingFilters.maxFlats);
 
-    // If both fields are filled and min is greater than max, trigger validation error
     if (pendingFilters.minFlats && pendingFilters.maxFlats && minFlats > maxFlats) {
-      errors.flats = t('flatsError'); // Example: "Minimum flat count must be less than maximum"
+      errors.flats = t('flatsError');
     }
 
-    // Save detected validation errors into state
-    setValidationErrors(errors);
-  }, [pendingFilters, t]);
+    // Update validationErrors only if errors changed to prevent unnecessary renders
+    if (Object.keys(errors).length !== Object.keys(validationErrors).length || Object.entries(errors).some(([key, value]) => validationErrors[key as keyof typeof validationErrors] !== value)) {
+      setValidationErrors(errors);
+    }
+  }, [pendingFilters, t, validationErrors]);
 
-  // Toggle admin role for a specific user
+  // Toggle admin role for user, send PATCH request to update role on backend
   const handleAdminToggle = async (userId: string, isAdmin: boolean) => {
     setUpdatingUserId(userId);
     try {
@@ -178,12 +192,13 @@ const AllUsers: React.FC = () => {
         }
       );
 
-      // If current user removed their own admin role, update context and redirect
+      // If current user removed their own admin role, update auth context and redirect home
       if (currentUser?.id === userId && newRole === 'user') {
         setUser({ ...currentUser, role: 'user' });
         navigate('/');
       } else {
-        fetchUsers();
+        // Otherwise, refresh users list to reflect changes
+        await fetchUsers(filters, sortOption);
       }
     } catch (err) {
       console.error('Failed to update role:', err);
@@ -204,7 +219,7 @@ const AllUsers: React.FC = () => {
     setIsDeleting(true);
     try {
       await handleRemoveUser(deleteTargetId);
-      fetchUsers();
+      await fetchUsers(filters, sortOption);
       setDeleteTargetId(null);
       setShowModal({ isVisible: false, message: '' });
     } catch (err) {

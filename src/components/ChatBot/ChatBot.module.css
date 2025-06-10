@@ -120,3 +120,32 @@
     background-color: var(--button-blue-hover);
     transform: scale(1.05);
 }
+
+@media (max-width: 550px) {
+    .chatBotWrapper {
+        left: 10px;
+
+        right: 10px;
+
+        bottom: 60px;
+        border-radius: 8px;
+        max-height: 80vh;
+        width: auto;
+        padding-left: 10px;
+        padding-right: 10px;
+        box-sizing: border-box;
+    }
+
+    .toggleButton {
+        right: 10px;
+        bottom: 10px;
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        line-height: 1;
+    }
+}
